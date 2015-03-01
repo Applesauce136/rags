@@ -36,11 +36,19 @@
              (matrix-rows mtx))
       (map (lambda (col) 
              (add-matrix-col! mtx col)) 
-           (eval `(map (lambda n
-                         n)
-                       ,@(map (lambda (lst)
-                                `(reverse (list ,@lst))) 
-                              cols)))))))
+           (matrix-cols-list cols)))))
+
+(define matrix-multiply
+  (lambda (row-mtx col-mtx)
+    (matrix-cols-list (matrix-cols col-mtx))))
+
+(define matrix-cols-list
+  (lambda (cols)
+    (eval `(map (lambda n
+                  n)
+                ,@(map (lambda (lst)
+                         `(reverse (list ,@lst))) 
+                       cols)))))
 
 (define matrix->string
   (lambda (mtx)
