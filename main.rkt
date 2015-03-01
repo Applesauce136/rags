@@ -11,4 +11,5 @@
              (open-output-file filename #:exists 'replace))))
 
 (define write-default
-  (curry write-pts 600 400 '(0 0 0) "pic.ppm"))
+  (curry write-pts
+         600 400 '(0 0 0) "pic.ppm"))

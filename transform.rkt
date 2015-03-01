@@ -8,12 +8,12 @@
  rotate
  )
 
-(define scale
-  (lambda (pts sx sy sz)
-    '()))
-
 (define translate
   (lambda (pts tx ty tz)
+    '()))
+
+(define scale
+  (lambda (pts sx sy sz)
     '()))
 
 (define rotate
