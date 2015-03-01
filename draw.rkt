@@ -6,7 +6,7 @@
 ;; MR BIG SHOT
 ;; ----------------------------------------------------------------
 (define draw-line
-  (lambda (x0 y0 x1 y1)
+  (lambda (color z x0 y0 x1 y1)
     (let* ((dx (abs (- x1 x0)))
            (dy (abs (- y1 y0)))
            (pri (cond ((<= dy dx) 'x)
@@ -39,11 +39,11 @@
                   (+ sec-c  
                      (if (check-mp? mp) sec-dir 0)))
 	   (pts '() 
-                (cons (cond ((eq? pri 'x) (list pri-c sec-c))
-                            ((eq? pri 'y) (list sec-c pri-c)))
+                (cons (cond ((eq? pri 'x) (list pri-c sec-c z color))
+                            ((eq? pri 'y) (list sec-c pri-c z color)))
                       pts)))
 	  ((= pri-c pri-f)
-	   (cons (cond ((eq? pri 'x) (list pri-f sec-f))
-                       ((eq? pri 'y) (list sec-f pri-f)))
+	   (cons (cond ((eq? pri 'x) (list pri-f sec-f z color))
+                       ((eq? pri 'y) (list sec-f pri-f z color)))
                  pts))))))
 ;; ================================================================
