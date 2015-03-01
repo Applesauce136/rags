@@ -10,10 +10,10 @@
 ;; ----------------------------------------------------------------
 (define draw-line
   (lambda (color pt0 pt1)
-    (let* ((x0 (first pt0))
-           (y0 (second pt0))
-           (x1 (first pt1))
-           (y1 (second pt1))
+    (let* ((y0 (first pt0))
+           (x0 (second pt0))
+           (y1 (first pt1))
+           (x1 (second pt1))
            (dx (abs (- x1 x0)))
            (dy (abs (- y1 y0)))
            (pri (cond ((<= dy dx) 'x)
