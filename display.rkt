@@ -3,11 +3,11 @@
 (require "contracts.rkt")
 
 (provide
- pixs->image
+ pixels->image
  image->string
 )
 
-(define pixs->image
+(define pixels->image
   (lambda (rows cols color pixs)
     (define img (make-vector (+ 1 (* rows cols)) color))
     (vector-set! img 0 (list rows cols 255))

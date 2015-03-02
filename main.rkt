@@ -4,7 +4,7 @@
          "display.rkt"
          "transform.rkt")
 
-(define write-pts
+(define write-points
   (lambda (rows cols bg filename pts)
     (display (image->string (pixs->image rows cols bg
                                          pts))
