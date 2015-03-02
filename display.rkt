@@ -12,8 +12,8 @@
     (define img (make-vector (+ 1 (* rows cols)) color))
     (vector-set! img 0 (list rows cols 255))
     (map (lambda (pix)
-           (define row (first pix))
-           (define col (second pix))
+           (define row (floor (first pix)))
+           (define col (floor (second pix)))
            (define color (third pix))
            (vector-set! img 
                         (+ 1
