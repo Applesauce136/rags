@@ -19,11 +19,13 @@
            (define row (floor (first pix)))
            (define col (floor (second pix)))
            (define color (third pix))
-           (vector-set! img 
-                        (+ 1
-                           (* row rows)
-                           col)
-                        color))
+           (define index (+ 1
+                            (* row rows)
+                            col))
+           (when (< index (vector-length img))
+             (vector-set! img 
+                          index
+                          color)))
          pixs)
     img))
 
