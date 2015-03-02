@@ -2,8 +2,10 @@
 
 (require "contracts.rkt")
 
-(provide
- draw-line
+(provide (contract-out
+          (draw-line
+           (-> color/c point/c point/c
+               (listof pixel/c))))
 )
 
 ;; MR BIG SHOT

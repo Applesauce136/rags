@@ -2,10 +2,16 @@
 
 (require "contracts.rkt")
 
-(provide
- translate
- scale
- rotate
+(provide (contract-out
+          (translate
+           (-> real? real? real? (listof point/c)
+               (listof point/c)))
+          (scale
+           (-> real? real? real? (listof point/c)
+               (listof point/c)))
+          (rotate
+           (-> symbol? real? (listof point/c)
+               (listof point/c))))
  )
 
 (define translate

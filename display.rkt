@@ -2,9 +2,13 @@
 
 (require "contracts.rkt")
 
-(provide
- pixels->image
- image->string
+(provide (contract-out
+          (pixels->image
+           (-> exact-nonnegative-integer? exact-nonnegative-integer? color/c (listof pixel/c)
+               vector?))
+          (image->string
+           (-> (vectorof pixel/c)
+               string?)))
 )
 
 (define pixels->image
