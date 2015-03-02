@@ -9,7 +9,7 @@
  )
 
 (define translate
-  (lambda (pts tx ty tz)
+  (lambda (tx ty tz pts)
     (map
      (lambda (pt)
        (list (+ tx (first pt))
@@ -18,7 +18,7 @@
      pts)))
 
 (define scale
-  (lambda (pts sx sy sz)
+  (lambda (sx sy sz pts)
     (map
      (lambda (pt)
        (list (* sx (first pt))
@@ -27,10 +27,11 @@
      pts)))
 
 (define rotate
-  (lambda (pts axis angle)
+  (lambda (axis angle_d pts)
     ;; (define axis_num (cond ((eq? 'x axis) 0)
     ;;                        ((eq? 'y axis) 1)
     ;;                        ((eq? 'z axis) 2)))
+    (define angle (degrees->radians angle_d))
     (map
      (lambda (pt)
        (let ((x (first pt))
@@ -38,10 +39,20 @@
              (z (third pt)))
          (cond ((eq? 'x axis)
                 (list x
-                      y
-                      z))
+                      (- (* y (cos angle))
+                         (* z (sin angle)))
+                      (+ (* y (sin angle))
+                         (* z (cos angle)))))
                ((eq? 'y axis)
-                )
+                (list (+ (* x (sin angle))
+                         (* z (cos angle)))
+                      y
+                      (- (* x (cos angle))
+                         (* z (sin angle)))))
                ((eq? 'z axis)
-                ))))
+                (list (- (* x (cos angle))
+                         (* y (sin angle)))
+                      (+ (* x (sin angle))
+                         (* y (cos angle)))
+                      z)))))
      pts)))
