@@ -4,35 +4,40 @@
 
 (provide (contract-out
           (pixels->image
-           (-> exact-nonnegative-integer? exact-nonnegative-integer? color/c (listof pixel/c)
-               vector?))
+           (-> exact-nonnegative-integer? ; rows
+               exact-nonnegative-integer? ; cols
+               color/c ; bg color
+               (listof pixel/c) ; pixels
+               image/c))
           (image->string
-           (-> (vectorof pixel/c)
-               string?)))
-)
+           (-> image/c
+               string?))))
 
 (define pixels->image
   (lambda (rows cols color pixs)
-    (define img (make-vector (+ 1 (* rows cols)) color))
-    (vector-set! img 0 (list rows cols 255))
+    (define img-pixs (make-vector (+ (* rows cols)) color))
     (map (lambda (pix)
            (define row (floor (first pix)))
            (define col (floor (second pix)))
            (define color (third pix))
-           (define index (+ 1
-                            (* row rows)
+           (define index (+ (* row rows)
                             col))
-           (when (< index (vector-length img))
-             (vector-set! img 
+           (when (< index (vector-length img-pixs))
+             (vector-set! img-pixs 
                           index
                           color)))
          pixs)
-    img))
+    (list rows cols 255 img-pixs)))
 
 (define image->string
   (lambda (img)
-    (string-join #:before-first "P3 "
-     (vector->list 
-      (vector-map (lambda (color)
-                    (string-join (map number->string color)))
-                  img)))))
+    (string-join
+     #:before-first "P3 "
+     (append
+      (list (number->string (first img))
+            (number->string (second img))
+            (number->string (third img)))
+      (vector->list 
+       (vector-map (lambda (color)
+                     (string-join (map number->string color)))
+                   (fourth img)))))))
