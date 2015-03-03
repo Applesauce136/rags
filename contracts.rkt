@@ -27,7 +27,7 @@
                        (list/c exact-nonnegative-integer?
                                exact-nonnegative-integer?
                                exact-nonnegative-integer?
-                               (vectorof pixel/c #:flat? #t))))
+                               (vectorof color/c #:flat? #t))))
 
 ;;; point: (x y z)
 (define point/c
