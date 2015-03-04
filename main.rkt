@@ -4,6 +4,11 @@
          "display.rkt"
          "transform.rkt")
 
+(provide (contract-out
+          (read-script
+           (-> string?
+               any))))
+
 (define write-points
   (lambda (rows cols bg filename pts)
     (call-with-output-file filename
@@ -93,14 +98,27 @@
                               starts
                               ends))))
 
-(define read-all
+(define read-script
+  (lambda (filename)
+    (call-with-input-file filename
+      (lambda (in)
+        (read-script-helper in (void))))))
+
+(define-namespace-anchor anchor)
+(define ns (namespace-anchor->namespace anchor))
+
+(define read-script-helper
   (lambda (in proc)
     (define datum (read in))
-    (unless (eq? datum eof)
-      (read-all in
-                (cond ((eq? proc (void))
-                       ((curry (eval datum))))
-                      ((procedure? ((curry proc datum)))
-                       (curry proc datum))
-                      (else
-                       (void)))))))
+    (unless (eof-object? datum)
+      (read-script-helper
+       in
+       (cond ((eq? proc (void))
+              ((curry (eval datum ns))))
+             ((procedure? ((curry proc datum)))
+              (curry proc datum))
+             (else
+              (void)))))))
+
+(display "Enter the filename of your script: ")
+(read-script (symbol->string (read)))
