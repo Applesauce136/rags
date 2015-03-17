@@ -1,11 +1,17 @@
 #lang racket
 
 (provide
+ matrix/c
  image/c
  color/c
  pixel/c
  point/c
 )
+
+;;; matrix: (vector of numbers)
+(define matrix/c
+  (flat-named-contract 'matrix
+                       (vectorof (vectorof number? #:flat? #t) #:flat? #t)))
 
 ;;; color: (r g b)
 (define color/c
