@@ -2,12 +2,8 @@
 
 (require "draw.rkt"
          "display.rkt"
-         "transform.rkt")
-
-(provide (contract-out
-          (read-script
-           (-> string?
-               any))))
+         "transform.rkt"
+         "curves.rkt")
 
 (define write-points
   (lambda (rows cols bg filename pts)
@@ -22,9 +18,9 @@
 
 (define write-default
   (curry write-points
-         600 300 '(0 0 0) "pic.ppm"))
+         500 500 '(255 255 255) "pic.ppm"))
 
-;; listxyzavg
+;; constants
 
 (define starts
   '())
@@ -37,6 +33,53 @@
 
 (define pixels
   '())
+
+(define steps 20)
+
+;; functions (chblistxyzavg)
+
+(define c
+  (lambda (cx cy r)
+    (set! starts (append (map (circle steps (list cx cy 0) r)
+                              (build-list steps identity))
+                         starts))
+    (set! ends (append (map (circle steps (list cx cy 0) r)
+                            (map add1 (build-list steps identity)))
+                       ends))))
+
+(define h
+  (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
+    (set! starts (append (map (hermite-curve steps
+                                             (list x0 y0 0)
+                                             (/ y1 x1)
+                                             (list x2 y2 0)
+                                             (/ y3 x3))
+                              (build-list steps identity))
+                         starts))
+    (set! ends (append (map (hermite-curve steps
+                                             (list x0 y0 0)
+                                             (/ y1 x1)
+                                             (list x2 y2 0)
+                                             (/ y3 x3))
+                            (map add1 (build-list steps identity)))
+                         ends))))
+
+(define b
+  (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
+    (set! starts (append (map (bezier-curve steps
+                                            (list x0 y0 0)
+                                            (list x1 y1 0)
+                                            (list x2 y2 0)
+                                            (list x3 y3 0))
+                              (build-list steps identity))
+                         starts))
+    (set! ends (append (map (bezier-curve steps
+                                          (list x0 y0 0)
+                                          (list x1 y1 0)
+                                          (list x2 y2 0)
+                                          (list x3 y3 0))
+                            (map add1 (build-list steps identity)))
+                       ends))))
 
 (define l
   (lambda (xa ya za xb yb zb)
@@ -84,19 +127,20 @@
 
 (define v
   (lambda ()
-    (write-default (append-map (curry draw-line '(255 255 255))
+    (write-default (append-map (curry draw-line '(0 0 0))
                                starts
                                ends))))
 
 (define g
-  (lambda (filename)
-    (write-points 500 500 '(0 0 0)
-                  (if (symbol? filename)
-                      (symbol->string filename)
-                      filename)
-                  (append-map (curry draw-line '(255 255 255))
-                              starts
-                              ends))))
+  ;; (lambda (filename)
+  ;;   (write-points 500 500 '(255 255 255)
+  ;;                 (if (symbol? filename)
+  ;;                     (symbol->string filename)
+  ;;                     filename)
+  ;;                 (append-map (curry draw-line '(255 255 255))
+  ;;                             starts
+  ;;                             ends)))
+  v)
 
 (define read-script
   (lambda (filename)
