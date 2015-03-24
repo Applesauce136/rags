@@ -13,6 +13,17 @@
            (-> image/c
                string?))))
 
+(define write-points
+  (lambda (rows cols bg filename pts)
+    (call-with-output-file filename
+      #:exists 'replace
+      (lambda (out)
+        (display
+         (image->string
+          (pixels->image rows cols bg
+                         pts))
+         out)))))
+
 (define pixels->image
   (lambda (rows cols color pixs)
     (define img-pixs (make-vector (+ (* rows cols)) color))

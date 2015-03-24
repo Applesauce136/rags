@@ -9,22 +9,40 @@
            (-> string?
                any))))
 
-(define write-points
-  (lambda (rows cols bg filename pts)
-    (call-with-output-file filename
-      #:exists 'replace
-      (lambda (out)
-        (display
-         (image->string
-          (pixels->image rows cols bg
-                         pts))
-         out)))))
+;; convenience function for testin
 
 (define write-default
   (curry write-points
          600 300 '(0 0 0) "pic.ppm"))
 
-;; listxyzavg
+;; parsing stuff
+;; ----------------------------------------------------------------
+(define read-script
+  (lambda (filename)
+    (call-with-input-file filename
+      (lambda (in)
+        (read-script-helper in (void))))))
+
+(define-namespace-anchor anchor)
+(define ns (namespace-anchor->namespace anchor))
+
+(define read-script-helper
+  (lambda (in proc)
+    (define datum (read in))
+    (unless (eof-object? datum)
+      (read-script-helper
+       in
+       (cond ((eq? proc (void))
+              ((curry (eval datum ns))))
+             ((procedure? ((curry proc datum)))
+              (curry proc datum))
+             (else
+              (void)))))))
+
+;; ================================================================
+
+;; stitching together of bits
+;;----------------------------------------------------------------
 
 (define starts
   '())
@@ -37,6 +55,11 @@
 
 (define pixels
   '())
+
+;; ================================================================
+
+;; DW's commands
+;;----------------------------------------------------------------
 
 (define l
   (lambda (xa ya za xb yb zb)
@@ -97,28 +120,7 @@
                   (append-map (curry draw-line '(255 255 255))
                               starts
                               ends))))
-
-(define read-script
-  (lambda (filename)
-    (call-with-input-file filename
-      (lambda (in)
-        (read-script-helper in (void))))))
-
-(define-namespace-anchor anchor)
-(define ns (namespace-anchor->namespace anchor))
-
-(define read-script-helper
-  (lambda (in proc)
-    (define datum (read in))
-    (unless (eof-object? datum)
-      (read-script-helper
-       in
-       (cond ((eq? proc (void))
-              ((curry (eval datum ns))))
-             ((procedure? ((curry proc datum)))
-              (curry proc datum))
-             (else
-              (void)))))))
+;; ================================================================
 
 (display "Enter the filename of your script: ")
 (read-script (symbol->string (read)))
