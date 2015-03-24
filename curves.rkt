@@ -31,44 +31,77 @@
       )))
 
 (define hermite-curve
-  (lambda (steps p0 p1 r0 r1)
-    (curve steps
-           (make-matrix
-            '(( 2 -2  1  1)
-              (-3  3 -2 -1)
-              ( 0  0  1  0)
-              ( 1  0  0  0)))
-           (make-matrix
-            `((,p0)
-              (,p1)
-              (,r0)
-              (,r1))))))
+  (lambda (steps p0 r0 p1 r1)
+    (define x-curve
+      (curve steps
+             (make-matrix
+              '(( 2 -2  1  1)
+                (-3  3 -2 -1)
+                ( 0  0  1  0)
+                ( 1  0  0  0)))
+             (make-matrix
+              `((,(list-ref p0 0))
+                (,(list-ref p1 0))
+                (,(denominator r0))
+                (,(denominator r1))))))
+    (define y-curve
+      (curve steps
+             (make-matrix
+              '(( 2 -2  1  1)
+                (-3  3 -2 -1)
+                ( 0  0  1  0)
+                ( 1  0  0  0)))
+             (make-matrix
+              `((,(list-ref p0 1))
+                (,(list-ref p1 1))
+                (,(numerator r0))
+                (,(numerator r1))))))
+    (define z (list-ref p0 2))
+    (lambda (step)
+      (list (x-curve step) (y-curve step) z))))
 
 (define bezier-curve
   (lambda (steps p0 p1 p2 p3)
-    (curve steps
-           (make-matrix
-            '(( 2 -2  1  1)
-              (-3  3 -2 -1)
-              ( 0  0  1  0)
-              ( 1  0  0  0)))
-           (make-matrix
-            `((,p0)
-              (,p1)
-              (,p2)
-              (,p3))))))
+    (define x-curve
+      (curve steps
+             (make-matrix
+              '((-1  3 -3  1)
+                ( 3  6  3  0)
+                (-3  3  0  0)
+                ( 1  0  0  0)))
+             (make-matrix
+              `((,(list-ref p0 0))
+                (,(list-ref p1 0))
+                (,(list-ref p2 0))
+                (,(list-ref p3 0))))))
+    (define y-curve
+      (curve steps
+             (make-matrix
+              '((-1  3 -3  1)
+                ( 3  6  3  0)
+                (-3  3  0  0)
+                ( 1  0  0  0)))
+             (make-matrix
+              `((,(list-ref p0 1))
+                (,(list-ref p1 1))
+                (,(list-ref p2 1))
+                (,(list-ref p3 1))))))
+    (define z (list-ref p0 2))
+    (lambda (step)
+      (list (x-curve step) (y-curve step) z))))
 
 (define curve
   (lambda (steps c-mtx dat-mtx)
-    (make-poly (list->vector
-                (matrix-col
-                 (matrix-multiply c-mtx dat-mtx)
-                 0)))))
+    (apply make-poly
+           (vector->list
+            (matrix-col
+             (matrix-multiply c-mtx dat-mtx)
+             0)))))
 
 (define make-poly
   (lambda coeffs
     (lambda (x)
-      (foldl +
+      (foldl + 0
              (map
               (lambda (coeff pow)
                 (* coeff (expt x pow)))

@@ -22,7 +22,9 @@
            (define color (third pix))
            (define index (+ (* row rows)
                             col))
-           (when (< index (vector-length img-pixs))
+           (when (and
+                  (<= 0 index)
+                  (< index (vector-length img-pixs)))
              (vector-set! img-pixs 
                           index
                           color)))

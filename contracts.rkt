@@ -11,7 +11,9 @@
 ;;; matrix: (vector of numbers)
 (define matrix/c
   (flat-named-contract 'matrix
-                       (vectorof (vectorof number? #:flat? #t) #:flat? #t)))
+                       (vectorof
+                        (vectorof (or number? point/c)
+                                  #:flat? #t) #:flat? #t)))
 
 ;;; color: (r g b)
 (define color/c
@@ -23,8 +25,8 @@
 ;;; pixel: (row col color)
 (define pixel/c
   (flat-named-contract 'pixel
-                       (list/c exact-nonnegative-integer?
-                               exact-nonnegative-integer?
+                       (list/c exact-integer?
+                               exact-integer?
                                color/c)))
 
 ;;; image: (rows cols max (vector of pixels))
