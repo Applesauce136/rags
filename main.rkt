@@ -56,7 +56,7 @@
 ;; DW's commands
 ;;----------------------------------------------------------------
 
-(define steps 5)
+(define steps 100)
 
 (define c
   (lambda (cx cy r)

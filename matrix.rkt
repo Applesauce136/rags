@@ -72,6 +72,3 @@
                              (13 14 15 16))))
 
 ;; (matrix-multiply ident thing)
-
-  
-  
