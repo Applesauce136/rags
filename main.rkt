@@ -58,52 +58,28 @@
 
 (define steps 5)
 
-;; functions (chblistxyzavg)
-
 (define c
   (lambda (cx cy r)
-    (set! starts (append (map (circle steps (list cx cy 0) r)
-                              (build-list steps identity))
-                         starts))
-    (set! ends (append (map (circle steps (list cx cy 0) r)
-                            (map add1 (build-list steps identity)))
-                       ends))))
+    (push-shape (map (circle steps (list cx cy 0) r)
+                            (build-list steps identity)))))
 
 (define h
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (set! starts (append (map (hermite-curve steps
-                                             (list x0 y0 0)
-                                             (list x2 y2 0)
-                                             (/ y1 x1)
-                                             (/ y3 x3))
-                              (build-list steps identity))
-                         starts))
-    (set! ends (append (map (hermite-curve steps
-                                             (list x0 y0 0)
-                                             (list x2 y2 0)
-                                             (/ y1 x1)
-                                             (/ y3 x3))
-                            (map add1 (build-list steps identity)))
-                       ends))
-    ;; '(0 0 0)
-    ))
+    (push-shape (map (hermite-curve steps
+                                    (list x0 y0 0)
+                                    (list x2 y2 0)
+                                    (/ y1 x1)
+                                    (/ y3 x3))
+                     (build-list steps identity)))))
 
 (define b
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (set! starts (append (map (bezier-curve steps
-                                            (list x0 y0 0)
-                                            (list x1 y1 0)
-                                            (list x2 y2 0)
-                                            (list x3 y3 0))
-                              (build-list steps identity))
-                         starts))
-    (set! ends (append (map (bezier-curve steps
-                                          (list x0 y0 0)
-                                          (list x1 y1 0)
-                                          (list x2 y2 0)
-                                          (list x3 y3 0))
-                            (map add1 (build-list steps identity)))
-                       ends))))
+    (push-shape (map (bezier-curve steps
+                                   (list x0 y0 0)
+                                   (list x1 y1 0)
+                                   (list x2 y2 0)
+                                   (list x3 y3 0))
+                     (build-list steps identity)))))
 
 (define l
   (lambda (xa ya za xb yb zb)
@@ -157,6 +133,8 @@
 
 (define g
   (lambda (filename)
+    ;; (map (lambda (shape) (printf "~a~n" shape))
+    ;;      shapes)
     (write-pixels 500 500 '(255 255 255)
                   (if (symbol? filename)
                       (symbol->string filename)
@@ -165,5 +143,7 @@
                               shapes))))
 ;; ================================================================
 
-(display "Enter the filename of your script: ")
-(read-script (symbol->string (read)))
+;; (display "Enter the filename of your script: ")
+;; (read-script (symbol->string (read)))
+
+(read-script "script_c")
