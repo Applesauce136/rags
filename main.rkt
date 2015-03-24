@@ -5,34 +5,56 @@
          "transform.rkt"
          "curves.rkt")
 
-(define write-points
-  (lambda (rows cols bg filename pts)
-    (call-with-output-file filename
-      #:exists 'replace
-      (lambda (out)
-        (display
-         (image->string
-          (pixels->image rows cols bg
-                         pts))
-         out)))))
+;; convenience function for testin
 
 (define write-default
-  (curry write-points
-         500 500 '(255 255 255) "pic.ppm"))
+  (curry write-pixels
+         600 300 '(255 255 255) "pic.ppm"))
 
-;; constants
+;; parsing stuff
+;; ----------------------------------------------------------------
+(define read-script
+  (lambda (filename)
+    (call-with-input-file filename
+      (lambda (in)
+        (read-script-helper in (void))))))
 
-(define starts
-  '())
+(define-namespace-anchor anchor)
+(define ns (namespace-anchor->namespace anchor))
 
-(define ends
-  '())
+(define read-script-helper
+  (lambda (in proc)
+    (define datum (read in))
+    (unless (eof-object? datum)
+      (read-script-helper
+       in
+       (cond ((eq? proc (void))
+              ((curry (eval datum ns))))
+             ((procedure? ((curry proc datum)))
+              (curry proc datum))
+             (else
+              (void)))))))
+
+;; ================================================================
+
+;; stitching together of bits
+;;----------------------------------------------------------------
+
+(define shapes '())
 
 (define transforms
   (curry identity))
 
-(define pixels
-  '())
+(define push-shape
+  (lambda (shape)
+    (set! shapes
+      (cons shape
+            shapes))))
+
+;; ================================================================
+
+;; DW's commands
+;;----------------------------------------------------------------
 
 (define steps 5)
 
@@ -85,8 +107,8 @@
 
 (define l
   (lambda (xa ya za xb yb zb)
-    (set! starts (cons (list xa ya za) starts))
-    (set! ends (cons (list xb yb zb) ends))))
+    (push-shape `((,xa ,ya ,za)
+                  (,xb ,yb ,zb)))))
 
 (define i
   (lambda ()
@@ -124,47 +146,24 @@
 
 (define a
   (lambda ()
-    (set! starts (transforms starts))
-    (set! ends (transforms ends))))
+    (set! shapes (map transforms shapes))))
 
 (define v
   (lambda ()
-    (write-default (append-map (curry draw-line '(0 0 0))
-                               starts
-                               ends))))
+    ;; (write-default (append-map (curry draw-line '(255 255 255))
+    ;;                            starts
+    ;;                            ends))
+    '()))
 
 (define g
-  ;; (lambda (filename)
-  ;;   (write-points 500 500 '(255 255 255)
-  ;;                 (if (symbol? filename)
-  ;;                     (symbol->string filename)
-  ;;                     filename)
-  ;;                 (append-map (curry draw-line '(255 255 255))
-  ;;                             starts
-  ;;                             ends)))
-  v)
-
-(define read-script
   (lambda (filename)
-    (call-with-input-file filename
-      (lambda (in)
-        (read-script-helper in (void))))))
-
-(define-namespace-anchor anchor)
-(define ns (namespace-anchor->namespace anchor))
-
-(define read-script-helper
-  (lambda (in proc)
-    (define datum (read in))
-    (unless (eof-object? datum)
-      (read-script-helper
-       in
-       (cond ((eq? proc (void))
-              ((curry (eval datum ns))))
-             ((procedure? ((curry proc datum)))
-              (curry proc datum))
-             (else
-              (void)))))))
+    (write-pixels 500 500 '(255 255 255)
+                  (if (symbol? filename)
+                      (symbol->string filename)
+                      filename)
+                  (append-map (curry draw-lines '(0 0 0))
+                              shapes))))
+;; ================================================================
 
 (display "Enter the filename of your script: ")
 (read-script (symbol->string (read)))

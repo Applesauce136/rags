@@ -3,13 +3,19 @@
 (require "contracts.rkt")
 
 (provide (contract-out
+          (draw-lines
+           (-> color/c (listof point/c)
+               (listof pixel/c)))
           (draw-line
            (-> color/c point/c point/c
-               (listof pixel/c))))
-)
+               (listof pixel/c)))))
 
-;; MR BIG SHOT
-;; ----------------------------------------------------------------
+(define draw-lines
+  (lambda (color pts)
+    (append-map (curry draw-line color)
+                (take pts (sub1 (length pts)))
+                (rest pts))))
+
 (define draw-line
   (lambda (color pt0 pt1)
     (let* ((y0 (exact-floor (first pt0)))
@@ -55,4 +61,3 @@
 	   (cons (cond ((eq? pri 'x) (list pri-f sec-f color))
                        ((eq? pri 'y) (list sec-f pri-f color)))
                  pts))))))
-;; ================================================================

@@ -3,6 +3,13 @@
 (require "contracts.rkt")
 
 (provide (contract-out
+          (write-pixels
+           (-> exact-nonnegative-integer? ; rows
+               exact-nonnegative-integer? ; cols
+               color/c ; bg color
+               string? ; filename
+               (listof pixel/c) ; all the pixels
+               any))
           (pixels->image
            (-> exact-nonnegative-integer? ; rows
                exact-nonnegative-integer? ; cols
@@ -12,6 +19,17 @@
           (image->string
            (-> image/c
                string?))))
+
+(define write-pixels
+  (lambda (rows cols bg filename pixs)
+    (call-with-output-file filename
+      #:exists 'replace
+      (lambda (out)
+        (display
+         (image->string
+          (pixels->image rows cols bg
+                         pixs))
+         out)))))
 
 (define pixels->image
   (lambda (rows cols color pixs)
