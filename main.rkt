@@ -12,8 +12,8 @@
 ;; convenience function for testin
 
 (define write-default
-  (curry write-points
-         600 300 '(0 0 0) "pic.ppm"))
+  (curry write-pixels
+         600 300 '(255 255 255) "pic.ppm"))
 
 ;; parsing stuff
 ;; ----------------------------------------------------------------
@@ -44,17 +44,16 @@
 ;; stitching together of bits
 ;;----------------------------------------------------------------
 
-(define starts
-  '())
-
-(define ends
-  '())
+(define shapes '())
 
 (define transforms
   (curry identity))
 
-(define pixels
-  '())
+(define push-shape
+  (lambda (shape)
+    (set! shapes
+      (cons shape
+            shapes))))
 
 ;; ================================================================
 
@@ -63,8 +62,8 @@
 
 (define l
   (lambda (xa ya za xb yb zb)
-    (set! starts (cons (list xa ya za) starts))
-    (set! ends (cons (list xb yb zb) ends))))
+    (push-shape `((,xa ,ya ,za)
+                  (,xb ,yb ,zb)))))
 
 (define i
   (lambda ()
@@ -102,24 +101,23 @@
 
 (define a
   (lambda ()
-    (set! starts (transforms starts))
-    (set! ends (transforms ends))))
+    (set! shapes (map transforms shapes))))
 
 (define v
   (lambda ()
-    (write-default (append-map (curry draw-line '(255 255 255))
-                               starts
-                               ends))))
+    ;; (write-default (append-map (curry draw-line '(255 255 255))
+    ;;                            starts
+    ;;                            ends))
+    '()))
 
 (define g
   (lambda (filename)
-    (write-points 500 500 '(0 0 0)
+    (write-pixels 500 500 '(255 255 255)
                   (if (symbol? filename)
                       (symbol->string filename)
                       filename)
-                  (append-map (curry draw-line '(255 255 255))
-                              starts
-                              ends))))
+                  (append-map (curry draw-lines '(0 0 0))
+                              shapes))))
 ;; ================================================================
 
 (display "Enter the filename of your script: ")
