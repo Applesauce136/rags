@@ -60,26 +60,25 @@
 
 (define c
   (lambda (cx cy r)
-    (push-shape (map (circle steps (list cx cy 0) r)
-                            (build-list steps identity)))))
+    (push-shape (map (circle (list cx cy 0) r)
+                     (append (build-list steps (curryr / steps))
+                             '(0))))))
 
 (define h
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-shape (map (hermite-curve steps
-                                    (list x0 y0 0)
+    (push-shape (map (hermite-curve (list x0 y0 0)
                                     (list x2 y2 0)
                                     (/ y1 x1)
                                     (/ y3 x3))
-                     (build-list steps identity)))))
+                     (build-list steps (curryr / steps))))))
 
 (define b
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-shape (map (bezier-curve steps
-                                   (list x0 y0 0)
+    (push-shape (map (bezier-curve (list x0 y0 0)
                                    (list x1 y1 0)
                                    (list x2 y2 0)
                                    (list x3 y3 0))
-                     (build-list steps identity)))))
+                     (build-list steps (curryr / steps))))))
 
 (define l
   (lambda (xa ya za xb yb zb)
@@ -133,8 +132,15 @@
 
 (define g
   (lambda (filename)
-    ;; (map (lambda (shape) (printf "~a~n" shape))
-    ;;      shapes)
+    (map (lambda (shape)
+           (map (lambda (pt)
+                  (map (lambda (num)
+                         (printf "~a " (floor num)))
+                       pt)
+                  (printf "~n"))
+                shape)
+           (printf "~n")) 
+         shapes)
     (write-pixels 500 500 '(255 255 255)
                   (if (symbol? filename)
                       (symbol->string filename)
