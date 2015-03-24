@@ -10,7 +10,7 @@
                procedure?))
           (hermite-curve
            (-> exact-positive-integer?
-               point/c rational? point/c rational?
+               point/c point/c rational? rational?
                procedure?))
           (bezier-curve
            (-> exact-positive-integer?
@@ -31,10 +31,9 @@
       )))
 
 (define hermite-curve
-  (lambda (steps p0 r0 p1 r1)
+  (lambda (steps p0 p1 r0 r1)
     (define x-curve
-      (curve steps
-             (make-matrix
+      (curve (make-matrix
               '(( 2 -2  1  1)
                 (-3  3 -2 -1)
                 ( 0  0  1  0)
@@ -45,8 +44,7 @@
                 (,(denominator r0))
                 (,(denominator r1))))))
     (define y-curve
-      (curve steps
-             (make-matrix
+      (curve (make-matrix
               '(( 2 -2  1  1)
                 (-3  3 -2 -1)
                 ( 0  0  1  0)
@@ -58,13 +56,14 @@
                 (,(numerator r1))))))
     (define z (list-ref p0 2))
     (lambda (step)
-      (list (x-curve step) (y-curve step) z))))
+      (list (x-curve (/ step steps))
+            (y-curve (/ step steps))
+            z))))
 
 (define bezier-curve
   (lambda (steps p0 p1 p2 p3)
     (define x-curve
-      (curve steps
-             (make-matrix
+      (curve (make-matrix
               '((-1  3 -3  1)
                 ( 3  6  3  0)
                 (-3  3  0  0)
@@ -75,8 +74,7 @@
                 (,(list-ref p2 0))
                 (,(list-ref p3 0))))))
     (define y-curve
-      (curve steps
-             (make-matrix
+      (curve (make-matrix
               '((-1  3 -3  1)
                 ( 3  6  3  0)
                 (-3  3  0  0)
@@ -88,10 +86,12 @@
                 (,(list-ref p3 1))))))
     (define z (list-ref p0 2))
     (lambda (step)
-      (list (x-curve step) (y-curve step) z))))
+      (list (x-curve (/ step steps))
+            (y-curve (/ step steps))
+            z))))
 
 (define curve
-  (lambda (steps c-mtx dat-mtx)
+  (lambda (c-mtx dat-mtx)
     (apply make-poly
            (vector->list
             (matrix-col

@@ -34,7 +34,7 @@
 (define pixels
   '())
 
-(define steps 20)
+(define steps 5)
 
 ;; functions (chblistxyzavg)
 
@@ -51,18 +51,20 @@
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
     (set! starts (append (map (hermite-curve steps
                                              (list x0 y0 0)
-                                             (/ y1 x1)
                                              (list x2 y2 0)
+                                             (/ y1 x1)
                                              (/ y3 x3))
                               (build-list steps identity))
                          starts))
     (set! ends (append (map (hermite-curve steps
                                              (list x0 y0 0)
-                                             (/ y1 x1)
                                              (list x2 y2 0)
+                                             (/ y1 x1)
                                              (/ y3 x3))
                             (map add1 (build-list steps identity)))
-                         ends))))
+                       ends))
+    ;; '(0 0 0)
+    ))
 
 (define b
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
