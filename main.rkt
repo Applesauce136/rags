@@ -15,25 +15,27 @@
 ;; ----------------------------------------------------------------
 (define read-script
   (lambda (filename)
+    
+    (define-namespace-anchor anchor)
+    (define ns (namespace-anchor->namespace anchor))
+
+    (define read-script-helper
+      (lambda (in proc)
+        (define datum (read in))
+        (unless (eof-object? datum)
+          (read-script-helper
+           in
+           (cond ((eq? proc (void))
+                  ((curry (eval datum ns))))
+                 ((procedure? ((curry proc datum)))
+                  (curry proc datum))
+                 (else
+                  (void)))))))
+
     (call-with-input-file filename
       (lambda (in)
         (read-script-helper in (void))))))
 
-(define-namespace-anchor anchor)
-(define ns (namespace-anchor->namespace anchor))
-
-(define read-script-helper
-  (lambda (in proc)
-    (define datum (read in))
-    (unless (eof-object? datum)
-      (read-script-helper
-       in
-       (cond ((eq? proc (void))
-              ((curry (eval datum ns))))
-             ((procedure? ((curry proc datum)))
-              (curry proc datum))
-             (else
-              (void)))))))
 
 ;; ================================================================
 
@@ -42,43 +44,51 @@
 
 (define shapes '())
 
-(define transforms
-  (curry identity))
-
 (define push-shape
   (lambda (shape)
     (set! shapes
       (cons shape
             shapes))))
 
+(define steps 100)
+
+(define shapify
+  (lambda (proc steps #:cyclic (cycle? #f))
+    (map proc
+         (append (build-list steps (curryr / steps))
+                 (if cycle?
+                     '(0)
+                     '())))))
+
+(define transforms
+  (curry identity))
+
 ;; ================================================================
 
 ;; DW's commands
 ;;----------------------------------------------------------------
 
-(define steps 100)
-
 (define c
   (lambda (cx cy r)
-    (push-shape (map (circle (list cx cy 0) r)
-                     (append (build-list steps (curryr / steps))
-                             '(0))))))
+    (push-shape (shapify (circle (list cx cy 0) r)
+                         steps
+                         #:cyclic #t))))
 
 (define h
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-shape (map (hermite-curve (list x0 y0 0)
-                                    (list x2 y2 0)
-                                    (/ y1 x1)
-                                    (/ y3 x3))
-                     (build-list steps (curryr / steps))))))
+    (push-shape (shapify (hermite-curve (list x0 y0 0)
+                                        (list x2 y2 0)
+                                        (/ y1 x1)
+                                        (/ y3 x3))
+                         steps))))
 
 (define b
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-shape (map (bezier-curve (list x0 y0 0)
-                                   (list x1 y1 0)
-                                   (list x2 y2 0)
-                                   (list x3 y3 0))
-                     (build-list steps (curryr / steps))))))
+    (push-shape (shapify (bezier-curve (list x0 y0 0)
+                                       (list x1 y1 0)
+                                       (list x2 y2 0)
+                                       (list x3 y3 0))
+                         steps))))
 
 (define l
   (lambda (xa ya za xb yb zb)
@@ -132,15 +142,15 @@
 
 (define g
   (lambda (filename)
-    (map (lambda (shape)
-           (map (lambda (pt)
-                  (map (lambda (num)
-                         (printf "~a " (floor num)))
-                       pt)
-                  (printf "~n"))
-                shape)
-           (printf "~n")) 
-         shapes)
+    ;; (map (lambda (shape)
+    ;;        (map (lambda (pt)
+    ;;               (map (lambda (num)
+    ;;                      (printf "~a " (floor num)))
+    ;;                    pt)
+    ;;               (printf "~n"))
+    ;;             shape)
+    ;;        (printf "~n")) 
+    ;;      shapes)
     (write-pixels 500 500 '(255 255 255)
                   (if (symbol? filename)
                       (symbol->string filename)

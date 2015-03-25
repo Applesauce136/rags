@@ -8,11 +8,14 @@
  point/c
 )
 
+;; program flow is generally like:
+;; generators -> points -> pixels -> image
+
 ;;; matrix: (vector of numbers)
 (define matrix/c
   (flat-named-contract 'matrix
                        (vectorof
-                        (vectorof (or number? point/c)
+                        (vectorof number?
                                   #:flat? #t) #:flat? #t)))
 
 ;;; color: (r g b)
