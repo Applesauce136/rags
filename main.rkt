@@ -13,12 +13,13 @@
 
 ;; parsing stuff
 ;; ----------------------------------------------------------------
+
+(define-namespace-anchor anchor)
+(define ns (namespace-anchor->namespace anchor))
+
 (define read-script
   (lambda (filename)
     
-    (define-namespace-anchor anchor)
-    (define ns (namespace-anchor->namespace anchor))
-
     (define read-script-helper
       (lambda (in proc)
         (define datum (read in))
