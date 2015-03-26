@@ -1,9 +1,6 @@
 #lang racket
 
-(require "draw.rkt"
-         "display.rkt"
-         "transform.rkt"
-         "curves.rkt")
+(require "display.rkt")
 
 ;; convenience function for testin
 

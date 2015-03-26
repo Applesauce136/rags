@@ -3,3 +3,5 @@
 *.ppm
 script_c
 gen.rkt
+Makefile
+test.rkt
