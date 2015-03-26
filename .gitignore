@@ -1,5 +1,5 @@
 # rags
 *~
 *.ppm
-io.rkt
 script_c
+gen.rkt
