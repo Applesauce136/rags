@@ -1,6 +1,6 @@
 #lang racket
 
-(require "contracts.rkt"
+(require "../contracts.rkt"
          "matrix.rkt")
 
 (provide (contract-out
