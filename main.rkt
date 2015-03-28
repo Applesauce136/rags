@@ -12,21 +12,13 @@
 
 (define shapes '())
 
+(define steps 100)
+
 (define push-shape
   (lambda (shape)
     (set! shapes
       (cons shape
             shapes))))
-
-(define steps 100)
-
-(define shapify
-  (lambda (proc steps #:cyclic (cycle? #f))
-    (map proc
-         (append (build-list steps (curryr / steps))
-                 (if cycle?
-                     '(0)
-                     '())))))
 
 (define transforms
   (curry identity))
@@ -38,25 +30,23 @@
 
 (define c
   (lambda (cx cy r)
-    (push-shape (shapify (circle (list cx cy 0) r)
-                         steps
-                         #:cyclic #t))))
+    (push-shape (circle steps (list cx cy 0) r))))
 
 (define h
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-shape (shapify (hermite-curve (list x0 y0 0)
-                                        (list x2 y2 0)
-                                        (/ y1 x1)
-                                        (/ y3 x3))
-                         steps))))
+    (push-shape (hermite-curve steps
+                               (list x0 y0 0)
+                               (list x2 y2 0)
+                               (/ y1 x1)
+                               (/ y3 x3)))))
 
 (define b
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-shape (shapify (bezier-curve (list x0 y0 0)
-                                       (list x1 y1 0)
-                                       (list x2 y2 0)
-                                       (list x3 y3 0))
-                         steps))))
+    (push-shape (bezier-curve steps
+                              (list x0 y0 0)
+                              (list x1 y1 0)
+                              (list x2 y2 0)
+                              (list x3 y3 0)))))
 
 (define l
   (lambda (xa ya za xb yb zb)
@@ -123,10 +113,8 @@
 
 ;; ================================================================
 
-;; (display "Enter the filename of your script: ")
-;; (read-script (symbol->string (read)))
-
 (define-namespace-anchor anchor)
 (define ns (namespace-anchor->namespace anchor))
 
-(read-script "script_c" ns)
+(display "Enter the filename of your script: ")
+(read-script (symbol->string (read)) ns)
