@@ -7,20 +7,22 @@
            (-> point/c real? real? real?
                (listof point/c)))
           (sphere
-           (-> point/c real?
+           (-> exact-positive-integer?
+               point/c real?
                (listof point/c)))
           (torus
-           (-> point/c real? real?
+           (-> exact-positive-integer?
+               point/c real? real?
                (listof point/c)))))
 
 (define box
   (lambda (pt width height depth)
-    '()))
+    '((0 0 0))))
 
 (define sphere
-  (lambda (pt radius)
-    '()))
+  (lambda (steps pt radius)
+    '((0 0 0))))
 
 (define torus
-  (lambda (pt c-radius t-radius)
-    '()))
+  (lambda (steps pt rad-t rad-c)
+    '((0 0 0))))

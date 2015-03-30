@@ -28,6 +28,18 @@
 ;; DW's commands
 ;;----------------------------------------------------------------
 
+(define p
+  (lambda (x y z width height depth)
+    (push-shape (box (list x y z) width height depth))))
+
+(define m
+  (lambda (x y radius)
+    (push-shape (sphere steps (list x y 0) radius))))
+
+(define d
+  (lambda (x y rad-t rad-c)
+    (push-shape (torus steps (list x y 0) rad-t rad-c))))
+
 (define c
   (lambda (cx cy r)
     (push-shape (circle steps (list cx cy 0) r))))
@@ -56,6 +68,10 @@
 (define i
   (lambda ()
     (set! transforms (curry identity))))
+
+(define w
+  (lambda ()
+    (set! shapes '())))
 
 (define s
   (lambda (sx sy sz)
