@@ -2,7 +2,7 @@
 
 *~
 *.ppm
-#.png
+*.png
 
 *_c
 gen.rkt
