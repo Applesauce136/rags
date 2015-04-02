@@ -1,9 +1,10 @@
 #lang racket
 
+(require racket/draw)
+
 (provide
  matrix/c
  image/c
- color/c
  pixel/c
  point/c
 )
@@ -30,7 +31,7 @@
   (flat-named-contract 'pixel
                        (list/c exact-integer?
                                exact-integer?
-                               color/c)))
+                               (is-a?/c color%))))
 
 ;;; image: (rows cols max (vector of pixels))
 (define image/c
