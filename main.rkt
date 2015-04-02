@@ -1,7 +1,8 @@
 #lang racket
 
 (require "base/main.rkt"
-         "draw/main.rkt")
+         "draw/main.rkt"
+         racket/draw)
 
 (provide (all-from-out
           "base/main.rkt"
@@ -132,5 +133,10 @@
 (define-namespace-anchor anchor)
 (define ns (namespace-anchor->namespace anchor))
 
-(display "Enter the filename of your script: ")
-(read-script (symbol->string (read)) ns)
+;; (display "Enter the filename of your script: ")
+;; (read-script (symbol->string (read)) ns)
+
+(define target (make-bitmap 30 30))
+(define dc (new bitmap-dc% (bitmap target)))
+(send dc draw-rectangle 10 10 10 10)
+(send target save-file "box.png" 'png)
