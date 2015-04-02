@@ -3,7 +3,8 @@
 (require racket/gui/base
          "main.rkt")
 
-(define my-bitmap (make-monochrome-bitmap 100 100))
+(define my-bitmap (make-bitmap 100 100))
+(define my-bitmap-dc (new bitmap-dc% (bitmap my-bitmap)))
 
 (define frame (new frame%
                    (label "Example")
@@ -21,5 +22,9 @@
 
 (new button% (parent panel-controls)
      (label "LEFF"))
+
+(map (lambda (n)
+       (send my-bitmap-dc set-pixel n 50 (make-object color% 255 0 0)))
+     (build-list 100 identity))
 
 (send frame show #t)
