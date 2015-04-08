@@ -1,8 +1,6 @@
 #lang racket
 
-(require racket/gui/base
-         ;; "main.rkt"
-         )
+(require racket/gui/base)
 
 (define my-bitmap (make-bitmap 500 500))
 (define my-bitmap-dc (new bitmap-dc% (bitmap my-bitmap)))
@@ -14,23 +12,23 @@
 
 (define my-canvas%
   (class canvas%
-    (define/override (on-event event)
-      (send mouse-msg set-label
-            (format "x: ~a y: ~a"
-                    (send event get-x)
-                    (send event get-y))))
     (define/override (on-char event)
       (define code (send event get-key-code))
       (when (char? code)
         (send keyboard-msg set-label
               (format "keycode: ~a"
                       (send event get-key-code)))))
+    (define/override (on-event event)
+      (send mouse-msg set-label
+            (format "x: ~a y: ~a"
+                    (send event get-x)
+                    (send event get-y))))
     (super-new)))
 
 (define panel-main (new horizontal-panel% (parent frame)))
 
 (define my-canvas
-  (new my-canvas% (parpent panel-main)
+  (new my-canvas% (parent panel-main)
        (min-width 500)
        (min-height 500)
        (paint-callback
