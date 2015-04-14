@@ -1,6 +1,4 @@
 # rags
 *~
 *.ppm
-*_c
-gen.rkt
 Makefile

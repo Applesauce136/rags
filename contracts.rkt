@@ -2,10 +2,13 @@
 
 (provide
  matrix/c
+ 
  image/c
  color/c
  pixel/c
+ 
  point/c
+ triangle/c
 )
 
 ;; program flow is generally like:
@@ -44,3 +47,9 @@
 (define point/c
   (flat-named-contract 'point
                        (list/c real? real? real?)))
+
+(define triangle/c
+  (flat-named-contract 'triangle
+                       (list/c point/c
+                               point/c
+                               point/c)))
