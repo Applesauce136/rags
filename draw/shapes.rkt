@@ -1,6 +1,8 @@
 #lang racket
 
-(require "../contracts.rkt")
+(require "../contracts.rkt"
+         "curves.rkt"
+         "transform.rkt")
 
 (provide (contract-out
           (box
@@ -65,10 +67,21 @@
        (,(+ x width) ,y ,z))
       )))
 
+(define torus
+  (lambda (steps pt rad-c rad-t)
+    (define t (circle steps `(,rad-t 0 0) rad-c))
+    (append-map
+     (lambda (step)
+       (define t1
+         (translate (first pt) (second pt) (third pt)
+                    (rotate 'y (* 360 (/ step steps)) t)))
+       (define t2
+         (translate (first pt) (second pt) (third pt)
+                    (rotate 'y (* 360 (/ (+ step 1) steps)) t))) 
+       (map list t1 (append (rest t1) (list (first t1))) t2))
+     (build-list steps identity))))
+
 (define sphere
   (lambda (steps pt radius)
-    '()))
+    (torus steps pt radius 0)))
 
-(define torus
-  (lambda (steps pt rad-t rad-c)
-    '()))

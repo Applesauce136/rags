@@ -7,7 +7,7 @@
           "base/main.rkt"
           "draw/main.rkt"))
 
-(define steps 100)
+(define steps 20)
 
 (define transforms
   (curry identity))
