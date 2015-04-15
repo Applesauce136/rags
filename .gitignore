@@ -2,9 +2,4 @@
 
 *~
 *.ppm
-*.png
-
-*_c
-gen.rkt
-
 Makefile

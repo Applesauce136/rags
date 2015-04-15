@@ -3,12 +3,30 @@
 (require "../contracts.rkt")
 
 (provide (contract-out
+          (draw-triangles
+           (-> color/c (listof triangle/c)
+               (listof pixel/c)))
+          (draw-triangle
+           (-> color/c triangle/c
+               (listof pixel/c)))
           (draw-lines
            (-> color/c (listof point/c)
-               (listof pixel/c)))
+               (listof pixel/c))) 
           (draw-line
            (-> color/c point/c point/c
                (listof pixel/c)))))
+
+(define draw-triangles
+  (lambda (color tris)
+    (append-map (curry draw-triangle color)
+                tris)))
+
+(define draw-triangle
+  (lambda (color tri)
+    (append (draw-lines color tri)
+            (draw-line color
+                       (first tri)
+                       (third tri)))))
 
 (define draw-lines
   (lambda (color pts)

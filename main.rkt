@@ -8,46 +8,62 @@
           "base/main.rkt"
           "draw/main.rkt"))
 
-;; stitching together of bits
-;;----------------------------------------------------------------
-
-(define shapes '())
-
-(define steps 100)
-
-(define push-shape
-  (lambda (shape)
-    (set! shapes
-      (cons shape
-            shapes))))
+(define steps 20)
 
 (define transforms
   (curry identity))
 
 ;; ================================================================
 
-;; DW's commands
+;; 3D things
 ;;----------------------------------------------------------------
+;; --------------------------------
+
+(define spatials '())
+
+(define push-spatial
+  (lambda (spatial)
+    (set! spatials
+      (cons spatial
+            spatials))))
+
+;; ================================
 
 (define p
   (lambda (x y z width height depth)
-    (push-shape (box (list x y z) width height depth))))
+    (push-spatial (box (list x y z) width height depth))))
 
 (define m
   (lambda (x y radius)
-    (push-shape (sphere steps (list x y 0) radius))))
+    (push-spatial (sphere steps (list x y 0) radius))))
 
 (define d
   (lambda (x y rad-t rad-c)
-    (push-shape (torus steps (list x y 0) rad-t rad-c))))
+    (push-spatial (torus steps (list x y 0) rad-t rad-c))))
+
+;; ================================================================
+
+;; 2D things
+;; ----------------------------------------------------------------
+;; --------------------------------
+
+(define planars '())
+
+(define push-planar
+  (lambda (planar)
+    (set! planars
+      (cons planar
+            planars))))
+
+;; ================================
 
 (define c
   (lambda (cx cy r)
-    (push-shape (circle steps (list cx cy 0) r))))
+    (push-planar (circle steps (list cx cy 0) r))))
 
 (define h
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-shape (hermite-curve steps
+    (push-planar (hermite-curve steps
                                (list x0 y0 0)
                                (list x2 y2 0)
                                (/ y1 x1)
@@ -55,7 +71,7 @@
 
 (define b
   (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-shape (bezier-curve steps
+    (push-planar (bezier-curve steps
                               (list x0 y0 0)
                               (list x1 y1 0)
                               (list x2 y2 0)
@@ -63,8 +79,13 @@
 
 (define l
   (lambda (xa ya za xb yb zb)
-    (push-shape `((,xa ,ya ,za)
+    (push-planar `((,xa ,ya ,za)
                   (,xb ,yb ,zb)))))
+
+;; ================================================================
+
+;; drawin things
+;; ----------------------------------------------------------------
 
 (define i
   (lambda ()
@@ -72,7 +93,8 @@
 
 (define w
   (lambda ()
-    (set! shapes '())))
+    (set! planars '())
+    (set! spatials '())))
 
 (define s
   (lambda (sx sy sz)
@@ -106,25 +128,29 @@
 
 (define a
   (lambda ()
-    (set! shapes (map transforms shapes))))
+    (set! planars (map transforms planars))
+    (set! spatials (map (curry map transforms) spatials))))
 
 (define g
   (lambda (filename)
-    ;; (map (lambda (shape)
+    ;; (map (lambda (planar)
     ;;        (map (lambda (pt)
     ;;               (map (lambda (num)
     ;;                      (printf "~a " (floor num)))
     ;;                    pt)
     ;;               (printf "~n"))
-    ;;             shape)
+    ;;             planar)
     ;;        (printf "~n")) 
-    ;;      shapes)
+    ;;      planars)
     (write-pixels 500 500 '(255 255 255)
                   (if (symbol? filename)
                       (symbol->string filename)
                       filename)
-                  (append-map (curry draw-lines '(0 0 0))
-                              shapes))))
+                  (append (append-map (curry draw-lines '(0 0 0))
+                                      planars)
+                          (append-map (curry draw-triangles '(0 0 0))
+                                      spatials)))))
+;; EDIT THIS LATER
 
 (define v g)
 
