@@ -159,5 +159,4 @@
 (define ns (namespace-anchor->namespace anchor))
 
 (display "Enter the filename of your script: ")
-(read-script ;; (symbol->string (read))
- "shapes_c" ns)
+(read-script (symbol->string (read)) ns)
