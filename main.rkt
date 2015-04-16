@@ -2,34 +2,35 @@
 
 (require racket/gui/base)
 
+(define width 800)
+(define height 600)
+
 (define clicks '())
 
-(define my-bitmap (make-bitmap 500 500))
+(define my-bitmap (make-bitmap width height))
 (define my-bitmap-dc (new bitmap-dc% (bitmap my-bitmap)))
 (define update-bitmap
   (lambda ()
     (send my-bitmap-dc clear)
     (map (lambda (pt)
-           (send my-bitmap-dc set-pixel (first pt) (second pt) (make-color 0 0 0)))
+           (send my-bitmap-dc set-pixel
+                 (first pt) (second pt) (make-color 0 0 0)))
          clicks)))
 
 (define frame (new frame%
-                   (label "DRAW THING")
-                   (width 300)
-                   (height 300)))
+                   (label "DRAW THING")))
 
 (define my-canvas%
   (class canvas%
     (define/override (on-char event)
       (define code (send event get-key-code))
-      (when (char? code)
-        (send keypress set-label
-              (format "keycode: \"~a\""
-                      (send event get-key-code)))))
+      (send keypress set-label
+            (format "keycode: \"~a\""
+                    code)))
     (define/override (on-event event)
       (define loc `(,(send event get-x)
-                         ,(send event get-y)
-                         0))
+                    ,(send event get-y)
+                    0))
       (define location-string
         (format "x: ~a y: ~a"
                 (send event get-x)
@@ -52,8 +53,8 @@
 
 (define my-canvas
   (new my-canvas% (parent panel-main)
-       (min-width 500)
-       (min-height 500)))
+       (min-width width)
+       (min-height height)))
 
 (define panel-controls (new vertical-panel% (parent panel-main)))
 (define button (new button% (parent panel-controls)
