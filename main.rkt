@@ -1,21 +1,35 @@
 #lang racket
 
-(require racket/gui/base)
+(require racket/gui/base
+         "draw-base.rkt")
 
 (define width 800)
 (define height 600)
 
-(define clicks '())
+(define drawables '())
+(set! drawables (cons (new line%)
+                      drawables))
+(define cur-index 0)
+(define current (list-ref drawables cur-index))
+(send current set-index 1)
+(send current set-point '(50 50 0))
 
 (define my-bitmap (make-bitmap width height))
 (define my-bitmap-dc (new bitmap-dc% (bitmap my-bitmap)))
 (define update-bitmap
   (lambda ()
     (send my-bitmap-dc clear)
-    (map (lambda (pt)
-           (send my-bitmap-dc set-pixel
-                 (first pt) (second pt) (make-color 0 0 0)))
-         clicks)))
+    (map
+     (lambda (drawable)
+       (map
+        (lambda (pt)
+          (send my-bitmap-dc set-pixel
+                (first pt) (second pt) (make-color 0 0 0)))
+        (send drawable pointify)))
+     drawables)))
+
+
+(define clicks '())
 
 (define frame (new frame%
                    (label "DRAW THING")))
@@ -30,18 +44,17 @@
     (define/override (on-event event)
       (define loc `(,(send event get-x)
                     ,(send event get-y)
-                    0))
+                    0)) 
       (define location-string
         (format "x: ~a y: ~a"
                 (send event get-x)
                 (send event get-y)))
+      (send current set-point loc)
       (send location set-label
             location-string)
+      (write-points)
       (when (send event button-down? 'left)
-        (set! clicks (cons loc clicks))
-        (when (< 5 (length clicks))
-          (set! clicks (take clicks 5)))
-        (write-points))
+        (send current inc-index))
       (on-paint))
     (define/override (on-paint)
       (define my-canvas-dc (send my-canvas get-dc))
