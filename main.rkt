@@ -1,162 +1,97 @@
 #lang racket
 
-(require "base/main.rkt"
-         "draw/main.rkt")
+(require racket/gui/base
+         "draw-base.rkt")
 
-(provide (all-from-out
-          "base/main.rkt"
-          "draw/main.rkt"))
+(define width 800)
+(define height 600)
 
-(define steps 20)
+(define drawables '())
+(set! drawables (cons (new line%)
+                      drawables))
+(define cur-index 0)
+(define current (list-ref drawables cur-index))
+(send current set-index 1)
+(send current set-point '(50 50 0))
 
-(define transforms
-  (curry identity))
-
-;; ================================================================
-
-;; 3D things
-;;----------------------------------------------------------------
-;; --------------------------------
-
-(define spatials '())
-
-(define push-spatial
-  (lambda (spatial)
-    (set! spatials
-      (cons spatial
-            spatials))))
-
-;; ================================
-
-(define p
-  (lambda (x y z width height depth)
-    (push-spatial (box (list x y z) width height depth))))
-
-(define m
-  (lambda (x y radius)
-    (push-spatial (sphere steps (list x y 0) radius))))
-
-(define d
-  (lambda (x y rad-t rad-c)
-    (push-spatial (torus steps (list x y 0) rad-t rad-c))))
-
-;; ================================================================
-
-;; 2D things
-;; ----------------------------------------------------------------
-;; --------------------------------
-
-(define planars '())
-
-(define push-planar
-  (lambda (planar)
-    (set! planars
-      (cons planar
-            planars))))
-
-;; ================================
-
-(define c
-  (lambda (cx cy r)
-    (push-planar (circle steps (list cx cy 0) r))))
-
-(define h
-  (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-planar (hermite-curve steps
-                               (list x0 y0 0)
-                               (list x2 y2 0)
-                               (/ y1 x1)
-                               (/ y3 x3)))))
-
-(define b
-  (lambda (x0 y0 x1 y1 x2 y2 x3 y3)
-    (push-planar (bezier-curve steps
-                              (list x0 y0 0)
-                              (list x1 y1 0)
-                              (list x2 y2 0)
-                              (list x3 y3 0)))))
-
-(define l
-  (lambda (xa ya za xb yb zb)
-    (push-planar `((,xa ,ya ,za)
-                  (,xb ,yb ,zb)))))
-
-;; ================================================================
-
-;; drawin things
-;; ----------------------------------------------------------------
-
-(define i
+(define my-bitmap (make-bitmap width height))
+(define my-bitmap-dc (new bitmap-dc% (bitmap my-bitmap)))
+(define update-bitmap
   (lambda ()
-    (set! transforms (curry identity))))
+    (send my-bitmap-dc clear)
+    (map
+     (lambda (drawable)
+       (map
+        (lambda (pt)
+          (send my-bitmap-dc set-pixel
+                (first pt) (second pt) (make-color 0 0 0)))
+        (send drawable pointify)))
+     drawables)))
 
-(define w
+
+(define clicks '())
+
+(define frame (new frame%
+                   (label "DRAW THING")))
+
+(define my-canvas%
+  (class canvas%
+    (define/override (on-char event)
+      (define code (send event get-key-code))
+      (send keypress set-label
+            (format "keycode: \"~a\""
+                    code)))
+    (define/override (on-event event)
+      (define loc `(,(send event get-x)
+                    ,(send event get-y)
+                    0)) 
+      (define location-string
+        (format "x: ~a y: ~a"
+                (send event get-x)
+                (send event get-y)))
+      (send current set-point loc)
+      (send location set-label
+            location-string)
+      (write-points)
+      (when (send event button-down? 'left)
+        (send current inc-index))
+      (on-paint))
+    (define/override (on-paint)
+      (define my-canvas-dc (send my-canvas get-dc))
+      (update-bitmap)
+      (send my-canvas-dc draw-bitmap my-bitmap 0 0))
+    (super-new)))
+
+(define panel-main (new horizontal-panel% (parent frame)))
+
+(define my-canvas
+  (new my-canvas% (parent panel-main)
+       (min-width width)
+       (min-height height)))
+
+(define panel-controls (new vertical-panel% (parent panel-main)))
+(define button (new button% (parent panel-controls)
+                    (label "LEFF")))
+(define location (new message% (parent panel-controls)
+                 (label "bah")
+                 (auto-resize #t)))
+(define keypress (new message% (parent panel-controls)
+                 (label "bah")
+                 (auto-resize #t)))
+(define points (new message% (parent panel-controls)
+                    (label "click")
+                    (auto-resize #t)))
+(define write-points
   (lambda ()
-    (set! planars '())
-    (set! spatials '())))
+    (send points set-label
+          (string-join
+           #:before-first "Clicks:\n"
+           (map
+            (lambda (pt)
+              (format "x: ~a y: ~a"
+                      (first pt)
+                      (second pt)))
+            clicks)
+           "\n"))))
 
-(define s
-  (lambda (sx sy sz)
-    (set! transforms
-      (compose (curry scale sx sy sz)
-               transforms))))
-
-(define t
-  (lambda (tx ty tz)
-    (set! transforms
-      (compose (curry translate tx ty tz)
-               transforms))))
-
-(define x
-  (lambda (angle)
-    (set! transforms
-      (compose (curry rotate 'x angle)
-               transforms))))
-
-(define y
-  (lambda (angle)
-    (set! transforms
-      (compose (curry rotate 'y angle)
-               transforms))))
-
-(define z
-  (lambda (angle)
-    (set! transforms
-      (compose (curry rotate 'z angle)
-               transforms))))
-
-(define a
-  (lambda ()
-    (set! planars (map transforms planars))
-    (set! spatials (map (curry map transforms) spatials))))
-
-(define g
-  (lambda (filename)
-    ;; (map (lambda (planar)
-    ;;        (map (lambda (pt)
-    ;;               (map (lambda (num)
-    ;;                      (printf "~a " (floor num)))
-    ;;                    pt)
-    ;;               (printf "~n"))
-    ;;             planar)
-    ;;        (printf "~n")) 
-    ;;      planars)
-    (write-pixels 500 500 '(255 255 255)
-                  (if (symbol? filename)
-                      (symbol->string filename)
-                      filename)
-                  (append (append-map (curry draw-lines '(0 0 0))
-                                      planars)
-                          (append-map (curry draw-triangles '(0 0 0))
-                                      spatials)))))
-;; EDIT THIS LATER
-
-(define v g)
-
-;; ================================================================
-
-(define-namespace-anchor anchor)
-(define ns (namespace-anchor->namespace anchor))
-
-(display "Enter the filename of your script: ")
-(read-script (symbol->string (read)) ns)
+(send frame show #t)
