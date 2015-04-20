@@ -4,10 +4,10 @@
          draw-line)
 
 (define draw-triangle
-  (lambda (tri)
-    (append-map draw-line
-                tri
-                (append (rest tri) (list (first tri))))))
+  (lambda (pt0 pt1 pt2)
+    (define starts (list pt0 pt1 pt2))
+    (define ends (list pt1 pt2 pt0))
+    (append-map draw-line starts ends)))
 
 (define draw-line
   (lambda (pt0 pt1)

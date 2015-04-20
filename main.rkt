@@ -1,7 +1,7 @@
 #lang racket
 
 (require racket/gui/base
-         "draw-base.rkt")
+         "drawable.rkt")
 
 (define width 800)
 (define height 600)
