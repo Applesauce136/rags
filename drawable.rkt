@@ -7,6 +7,7 @@
 (define drawable<%>
   (interface ()
     set-index inc-index set-point
+    translate scale rotate
     draw name description))
 
 (define line%
@@ -23,7 +24,7 @@
             pt0)))
 
     (define cur-index 0)
-    
+
     (define/public set-index
       (lambda (index)
         (when (<= -1 index 1)
@@ -43,6 +44,21 @@
                (set! pt0 pt))
               ((= cur-index 1)
                (set! pt1 pt)))))
+
+    (define internal-map
+      (lambda (proc)
+        (set! pt0 (map exact-floor (proc pt0)))
+        (set! pt1 (map exact-floor (proc pt1)))))
+    
+    (define/public scale
+      (lambda (x y z)
+        (internal-map (curry scale-point x y z))))
+    (define/public translate
+      (lambda (x y z)
+        (internal-map (curry translate-point x y z))))
+    (define/public rotate
+      (lambda (axis angle_d)
+        (internal-map (curry rotate-point axis angle_d))))
     
     (define/public draw
       (lambda (new-pt)
@@ -109,6 +125,22 @@
                (set! pt1 new-pt))
               ((= cur-index 2)
                (set! pt2 new-pt)))))
+
+    (define internal-map
+      (lambda (proc)
+        (set! pt0 (map exact-floor (proc pt0)))
+        (set! pt1 (map exact-floor (proc pt1)))
+        (set! pt2 (map exact-floor (proc pt2)))))
+    
+    (define/public scale
+      (lambda (x y z)
+        (internal-map (curry scale-point x y z))))
+    (define/public translate
+      (lambda (x y z)
+        (internal-map (curry translate-point x y z))))
+    (define/public rotate
+      (lambda (axis angle_d)
+        (internal-map (curry rotate-point axis angle_d))))
     
     (define/public draw
       (lambda (new-pt)

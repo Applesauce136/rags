@@ -1,7 +1,47 @@
 #lang racket
 
 (provide draw-triangle
-         draw-line)
+         draw-line
+         translate-point
+         scale-point
+         rotate-point)
+
+(define translate-point
+  (lambda (tx ty tz pt)
+    (list (+ tx (first pt))
+          (+ ty (second pt))
+          (+ tz (third pt)))))
+
+(define scale-point
+  (lambda (sx sy sz pt)
+    (list (* sx (first pt))
+          (* sy (second pt))
+          (* sz (third pt)))))
+
+(define rotate-point
+  (lambda (axis angle_d pt)
+    (define angle (degrees->radians angle_d))
+    (let ((x (first pt))
+          (y (second pt))
+          (z (third pt)))
+      (cond ((eq? 'x axis)
+             (list x
+                   (- (* y (cos angle))
+                      (* z (sin angle)))
+                   (+ (* y (sin angle))
+                      (* z (cos angle)))))
+            ((eq? 'y axis)
+             (list (- (* x (cos angle))
+                      (* z (sin angle)))
+                   y
+                   (+ (* x (sin angle))
+                      (* z (cos angle)))))
+            ((eq? 'z axis)
+             (list (- (* x (cos angle))
+                      (* y (sin angle)))
+                   (+ (* x (sin angle))
+                      (* y (cos angle)))
+                   z))))))
 
 (define draw-triangle
   (lambda (pt0 pt1 pt2)

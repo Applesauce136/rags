@@ -104,6 +104,9 @@
              (send current set-index
                    (- (char->integer code)
                       (char->integer #\1))))
+
+            ((eq? code 'escape)
+             (move-current -1))
             
             ((eq? code #\a)
              (set! adding? #t)
@@ -114,7 +117,21 @@
                               (if (send char-event get-shift-down)
                                   -1 1)))))
       (send this refresh))
-    (define/override (on-event mouse-event) 
+    (define/override (on-event mouse-event)
+      (when (and (send mouse-event get-right-down)
+                 current)
+        (send current rotate 'y
+              (- (send mouse-event get-x) (first loc)))
+        (send current rotate 'x
+              (- (send mouse-event get-y) (second loc))))
+      
+      (when (and (send mouse-event get-middle-down)
+                 current)
+        (send current translate
+              (- (send mouse-event get-x) (first loc))
+              (- (send mouse-event get-y) (second loc))
+              0))
+      
       (set! loc
         (list (send mouse-event get-x)
               (send mouse-event get-y)
