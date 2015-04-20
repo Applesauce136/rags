@@ -5,9 +5,9 @@
 
 (define draw-triangle
   (lambda (tri)
-    (map draw-line
-         tri
-         (append (rest tri) (list (first tri))))))
+    (append-map draw-line
+                tri
+                (append (rest tri) (list (first tri))))))
 
 (define draw-line
   (lambda (pt0 pt1)
