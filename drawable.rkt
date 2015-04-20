@@ -8,18 +8,28 @@
     (super-new)
     (init init-pt)
 
-    (field (rotate-x 0)
-           (rotate-y 0)
+    (field (degrees-x 0)
+           (degrees-y 0)
            (pts (mcons init-pt '()))
            (current pts)
            (anchor init-pt))
 
+    (define/public rotate-x
+      (lambda (degrees)
+        (set! degrees-x (+ degrees-x degrees))))
+    (define/public rotate-y
+      (lambda (degrees)
+        (set! degrees-y (+ degrees-y degrees))))
+    (define/public translate
+      (lambda (x y z)
+        (set! anchor (map + anchor (list x y z)))))
+    
     (define/public draw
       (lambda (new-pt)
         (map (compose (curry map exact-floor)
                       (apply (curry translate-point) anchor)
-                      (curry rotate-point 'x rotate-x)
-                      (curry rotate-point 'y rotate-y))
+                      (curry rotate-point 'x degrees-x)
+                      (curry rotate-point 'y degrees-y))
              (pointify (map
                         (lambda (pt)
                           (cond ((and new-pt

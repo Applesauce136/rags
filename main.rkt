@@ -80,13 +80,13 @@
 
     (super-new)
     
-    (define loc '(0 0 0))
+    (define old-loc '(0 0 0))
     (define can-click? #t)
     
     (define/override (on-char char-event)
       (define code (send char-event get-key-code))
       (cond ((eq? code 'escape)
-             (set! adding #f)
+             (set! adding? #f)
              (move-current -1))
             (adding?
              (cond ((eq? code #\l)
@@ -114,39 +114,38 @@
                                   -1 1)))))
       (send this refresh))
     (define/override (on-event mouse-event)
-      (when (and (send mouse-event get-right-down)
-                 current)
-        (send current rotate 'y
-              (- (send mouse-event get-x) (first loc)))
-        (send current rotate 'x
-              (- (send mouse-event get-y) (second loc))))
-      
-      (when (and (send mouse-event get-middle-down)
-                 current)
-        (send current translate
-              (- (send mouse-event get-x) (first loc))
-              (- (send mouse-event get-y) (second loc))
-              0))
-      
-      (set! loc
-        (list (send mouse-event get-x)
-              (send mouse-event get-y)
-              0))
+      (define loc (list (send mouse-event get-x)
+                        (send mouse-event get-y)
+                        0))
+      (cond ((and (send mouse-event get-right-down)
+                  current)
+             (send current rotate-y
+                   (- (send mouse-event get-x) (first old-loc)))
+             (send current rotate-x
+                   (- (send mouse-event get-y) (second old-loc))))
+            
+            ((and (send mouse-event get-middle-down)
+                  current)
+             (send current translate
+                   (- (send mouse-event get-x) (first old-loc))
+                   (- (send mouse-event get-y) (second old-loc))
+                   0))
+            ((send mouse-event get-left-down) 
+             (when can-click?
+               (when adding?
+                 (add-drawable (new new-drawable (init-pt loc))))
+               (when current
+                 (send current set-point loc)
+                 (unless (send current inc-index)
+                   (move-current -1)))
+               (set! can-click? #f))
+             (set! can-click? #t)))
       (send location set-label
             (format "~a" loc))
-      (if (send mouse-event get-left-down) 
-          (when can-click?
-            (when adding?
-              (add-drawable (new new-drawable (init-pt loc))))
-            (when current
-              (send current set-point loc)
-              (unless (send current inc-index)
-                (move-current -1)))
-            (set! can-click? #f))
-          (set! can-click? #t))
+      (set! old-loc loc)
       (send this refresh))
     (define/override (on-paint)
-      (update-bitmap loc)
+      (update-bitmap old-loc)
       (update-names)
       (update-adding)
       (update-description)
