@@ -139,9 +139,20 @@
      (vector-map (curry matrix-col mtx)
                  (build-vector (matrix-cols mtx) identity))))
 
-(define distance
+(define point-distance
   (lambda (pt0 pt1)
     (sqrt (foldl (lambda (pt0 pt1 sum)
                    (+ sum (expt (- pt1 pt0) 2)))
                  0
                  (take pt0 2) (take pt1 2)))))
+
+(define point-diff
+  (lambda (pt0 pt1)
+    (map - pt1 pt0)))
+
+(define mlist->list
+  (lambda (mlist)
+    (if (eq? mlist '())
+        '()
+        (cons (mcar mlist)
+              (mlist->list (mcdr mlist))))))

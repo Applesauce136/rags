@@ -1,7 +1,6 @@
 #lang racket
 
 (require racket/gui/base
-         "drawable.rkt"
          "polygons.rkt")
 
 (define width 800)
@@ -54,7 +53,7 @@
   (lambda ()
     (send adding set-label
           (if adding?
-              (format "ADDING A:~n~a" (send (new new-drawable (pt '(0 0 0))) name))
+              (format "ADDING A:~n~a" (send (new new-drawable (init-pt '(0 0 0))) name))
               ""))))
 (define update-names
   (lambda ()
@@ -74,11 +73,6 @@
     (send description set-label
           (if current
               (send current description)
-              ""))
-    (send adding set-label
-          (if adding?
-              (string-append "ADDING A:\n"
-                             (send (new new-drawable (pt '(0 0 0))) name))
               ""))))
 
 (define my-canvas%
@@ -96,10 +90,11 @@
                     (set! adding #f))
                    ((eq? code #\l)
                     (set! new-drawable line%))
-                   ((eq? code #\t)
-                    (set! new-drawable triangle%))
-                   ((eq? code #\c)
-                    (set! new-drawable circle%))))
+                   ;; ((eq? code #\t)
+                   ;;  (set! new-drawable triangle%))
+                   ;; ((eq? code #\c)
+                   ;;  (set! new-drawable circle%))
+                   ))
             
             ((and (char? code)
                   (char-numeric? code)
@@ -144,7 +139,7 @@
       (if (send mouse-event get-left-down) 
           (when can-click?
             (when adding?
-              (add-drawable (new new-drawable (pt loc))))
+              (add-drawable (new new-drawable (init-pt loc))))
             (when current
               (send current set-point loc)
               (unless (send current inc-index)
