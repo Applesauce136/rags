@@ -15,8 +15,9 @@
            (anchor init-pt))
 
     (define/public draw
-      (lambda (new-pt) 
-        (map (compose (apply (curry translate-point) anchor)
+      (lambda (new-pt)
+        (map (compose (curry map exact-floor)
+                      (apply (curry translate-point) anchor)
                       (curry rotate-point 'x rotate-x)
                       (curry rotate-point 'y rotate-y))
              (pointify (map

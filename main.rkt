@@ -41,8 +41,8 @@
         (lambda (pt)
           (define x (first pt))
           (define y (second pt))
-          (when (and (<= 0 x width)
-                     (<= 0 y height))
+          (when (and (< 0 x width)
+                     (< 0 y height))
               (send my-bitmap-dc set-pixel
                     x y color)))
         (send drawable draw

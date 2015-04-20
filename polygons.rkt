@@ -4,7 +4,7 @@
          "primitives.rkt")
 (provide (all-defined-out))
 
-(define steps 10)
+(define steps 20)
 
 (define line%
   (class drawable%
@@ -75,23 +75,11 @@
 
     (define/override pointify
       (lambda (pts)
-        (define center (first pts))
-        (define rad-pt (second pts))
-        (define x (list-ref center 0))
-        (define y (list-ref center 1))
-        (define z (list-ref center 2))
-        (define r (point-distance center rad-pt))
-        (map
-         (lambda (step)
-           (define angle (* 2 pi step))
-           (list
-            (+ x (* r (cos angle)))
-            (+ y (* r (sin angle)))
-            z))
-         (list 0 1 2 3 4 5 6)
-         ;; (build-list (+ steps 1) (lambda (n)
-         ;;                           (/ n steps)))
-         )))
+        (define circle (make-circle (first pts)
+                                    (apply point-distance pts)
+                                    steps))
+        (append-map draw-line circle (append (rest circle) (list (last circle))))))
+    
     (define/override name
       (lambda ()
         "Circle"))

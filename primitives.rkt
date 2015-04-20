@@ -156,3 +156,18 @@
         '()
         (cons (mcar mlist)
               (mlist->list (mcdr mlist))))))
+
+(define make-circle
+  (lambda (center radius steps)
+    (define x (list-ref center 0))
+    (define y (list-ref center 1))
+    (define z (list-ref center 2))
+    (map
+     (lambda (step)
+       (define angle (* 2 pi step))
+       (list
+         (+ x (* radius (cos angle)))
+         (+ y (* radius (sin angle)))
+         z))
+     (build-list (+ steps 1) (lambda (step)
+                               (/ step steps))))))
