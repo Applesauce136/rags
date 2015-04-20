@@ -85,15 +85,16 @@
     
     (define/override (on-char char-event)
       (define code (send char-event get-key-code))
-      (cond (adding?
-             (cond ((eq? code 'escape)
-                    (set! adding #f))
-                   ((eq? code #\l)
+      (cond ((eq? code 'escape)
+             (set! adding #f)
+             (move-current -1))
+            (adding?
+             (cond ((eq? code #\l)
                     (set! new-drawable line%))
-                   ;; ((eq? code #\t)
-                   ;;  (set! new-drawable triangle%))
-                   ;; ((eq? code #\c)
-                   ;;  (set! new-drawable circle%))
+                   ((eq? code #\t)
+                    (set! new-drawable triangle%))
+                   ((eq? code #\c)
+                    (set! new-drawable circle%))
                    ))
             
             ((and (char? code)
@@ -102,9 +103,6 @@
              (send current set-index
                    (- (char->integer code)
                       (char->integer #\1))))
-
-            ((eq? code 'escape)
-             (move-current -1))
             
             ((eq? code #\a)
              (set! adding? #t)

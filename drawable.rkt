@@ -36,15 +36,15 @@
           (define mlist-ref
             (lambda (mlist index)
               (if (= index 0)
-                  (mcar mlist)
-                  (mlist-ref (mcdr mlist)))))
+                  mlist
+                  (mlist-ref (mcdr mlist) (- index 1)))))
           (set! current (mlist-ref pts index)))))
 
     (define/public inc-index
       (lambda ()
         (cond ((eq? current '())
                (set! current pts))
-              ((eq? (mcdr current) '()) ;; or, the last one
+              ((eq? (mcdr current) '()) ;; or, current is the last one
                #f)
               (else
                (set! current (mcdr current))))))
