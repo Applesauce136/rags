@@ -1,10 +1,6 @@
 #lang racket
 
-(provide draw-triangle
-         draw-line
-         translate-point
-         scale-point
-         rotate-point)
+(provide (all-defined-out))
 
 (define translate-point
   (lambda (tx ty tz pt)
@@ -95,3 +91,57 @@
            (cons (cond ((eq? pri 'x) (list sec-f pri-f z))
                        ((eq? pri 'y) (list pri-f sec-f z)))
                  pts))))))
+
+
+(define make-matrix
+  (lambda (biglist)
+    (list->vector
+     (map list->vector biglist))))
+
+(define matrix-row
+  (lambda (mtx row)
+    (vector-ref mtx row)))
+
+(define matrix-col
+  (lambda (mtx col)
+    (vector-map
+     (curryr vector-ref col)
+     mtx)))
+
+(define matrix-rows
+  (lambda (mtx)
+    (vector-length mtx)))
+
+(define matrix-cols
+  (lambda (mtx)
+    (vector-length (matrix-row mtx 0))))
+
+(define matrix-ref
+  (lambda (mtx row col)
+    (vector-ref (matrix-row mtx row) col)))
+
+(define matrix-multiply
+  (lambda (mtx1 mtx2)
+    (vector-map
+     (lambda (mtx-row)
+       (vector-map
+        (curry dot mtx-row)
+        (matrix-rotate mtx2)))
+     mtx1)))
+
+(define dot
+  (lambda (v1 v2)
+    (foldl + 0
+           (vector->list (vector-map * v1 v2)))))
+
+(define matrix-rotate
+  (lambda (mtx)
+     (vector-map (curry matrix-col mtx)
+                 (build-vector (matrix-cols mtx) identity))))
+
+(define distance
+  (lambda (pt0 pt1)
+    (sqrt (foldl (lambda (pt0 pt1 sum)
+                   (+ sum (expt (- pt1 pt0) 2)))
+                 0
+                 (take pt0 2) (take pt1 2)))))

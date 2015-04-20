@@ -27,17 +27,7 @@
 
 (define circle
   (lambda (steps pt r)
-    (define circle-proc
-      (lambda (pt r)
-        (define x (list-ref pt 0))
-        (define y (list-ref pt 1))
-        (define z (list-ref pt 2))
-        (lambda (step)
-          (define angle (* 2 pi step))
-          (list
-           (+ x (* r (cos angle)))
-           (+ y (* r (sin angle)))
-           z))))
+
     (shapify (circle-proc pt r)
              steps
              #:cyclic #t)))

@@ -1,7 +1,8 @@
 #lang racket
 
 (require racket/gui/base
-         "drawable.rkt")
+         "drawable.rkt"
+         "polygons.rkt")
 
 (define width 800)
 (define height 600)
@@ -96,7 +97,9 @@
                    ((eq? code #\l)
                     (set! new-drawable line%))
                    ((eq? code #\t)
-                    (set! new-drawable triangle%))))
+                    (set! new-drawable triangle%))
+                   ((eq? code #\c)
+                    (set! new-drawable circle%))))
             
             ((and (char? code)
                   (char-numeric? code)
