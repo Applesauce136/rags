@@ -4,7 +4,7 @@
          "primitives.rkt")
 (provide (all-defined-out))
 
-(define steps 20)
+(define 2d-steps 20)
 
 (define line%
   (class drawable%
@@ -77,7 +77,7 @@
       (lambda (pts)
         (define circle (make-circle (first pts)
                                     (apply point-distance pts)
-                                    steps))
+                                    2d-steps))
         (append-map draw-line circle (append (rest circle) (list (last circle))))))
     
     (define/override name
@@ -139,9 +139,9 @@
                            (list (x-curve step)
                                  (y-curve step)
                                  z))
-                         (build-list steps
+                         (build-list 2d-steps
                                      (lambda (step)
-                                       (/ step steps)))))
+                                       (/ step 2d-steps)))))
         (append-map draw-line
                     (take gen-pts (- (length gen-pts) 1))
                     (rest gen-pts))))
@@ -214,9 +214,9 @@
                            (list (x-curve step)
                                  (y-curve step)
                                  z))
-                         (build-list steps
+                         (build-list 2d-steps
                                      (lambda (step)
-                                       (/ step steps)))))
+                                       (/ step 2d-steps)))))
         (append-map draw-line
                     (take gen-pts (- (length gen-pts) 1))
                     (rest gen-pts))))
@@ -241,37 +241,3 @@
                     (mcar (mcdr (mcdr pts)))
                     (mcar (mcdr (mcdr (mcdr pts))))))
          "\n")))))
-
-;; (define bezier-curve
-;;   (lambda (steps
-;;            p0 p1 p2 p3)
-;;     (define bezier-curve-proc
-;;       (lambda (p0 p1 p2 p3)
-;;         (define x-curve
-;;           (curve (make-matrix
-;;                   '((-1  3 -3  1)
-;;                     ( 3 -6  3  0)
-;;                     (-3  3  0  0)
-;;                     ( 1  0  0  0)))
-;;                  (make-matrix
-;;                   `((,(first p0))
-;;                     (,(first p1))
-;;                     (,(first p2))
-;;                     (,(first p3))))))
-;;         (define y-curve
-;;           (curve (make-matrix
-;;                   '((-1  3 -3  1)
-;;                     ( 3 -6  3  0)
-;;                     (-3  3  0  0)
-;;                     ( 1  0  0  0)))
-;;                  (make-matrix
-;;                   `((,(second p0))
-;;                     (,(second p1))
-;;                     (,(second p2))
-;;                     (,(second p3))))))
-;;         (define z (third p0))
-;;         (lambda (step)
-;;           (list (x-curve step)
-;;                 (y-curve step)
-;;                 z))))
-;;     (shapify (bezier-curve-proc p0 p1 p2 p3) steps)))

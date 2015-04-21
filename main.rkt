@@ -1,7 +1,8 @@
 #lang racket
 
 (require racket/gui/base
-         "polygons.rkt")
+         "polygons.rkt"
+         "polyhedra.rkt")
 
 (define width 800)
 (define height 600)
@@ -98,7 +99,9 @@
                    ((eq? code #\h)
                     (set! new-drawable hermite%))
                    ((eq? code #\b)
-                    (set! new-drawable bezier%))))
+                    (set! new-drawable bezier%))
+                   ((eq? code #\d)
+                    (set! new-drawable torus%))))
             
             ((and (char? code)
                   (char-numeric? code)
