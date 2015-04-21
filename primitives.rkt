@@ -150,6 +150,15 @@
   (lambda (pt0 pt1)
     (map - pt1 pt0)))
 
+(define point-slope
+  (lambda (pt0 pt1)
+    (apply (lambda (v1 v2)
+             (/ v2
+                (if (= v1 0)
+                    .01
+                    v1)))
+           (take (point-diff pt0 pt1) 2))))
+
 (define mlist->list
   (lambda (mlist)
     (if (eq? mlist '())
@@ -171,3 +180,21 @@
          z))
      (build-list (+ steps 1) (lambda (step)
                                (/ step steps))))))
+
+(define curve
+  (lambda (c-mtx dat-mtx)
+    (apply make-poly
+           (vector->list
+            (matrix-col
+             (matrix-multiply c-mtx dat-mtx)
+             0)))))
+
+(define make-poly
+  (lambda coeffs
+    (lambda (x)
+      (foldl + 0
+             (map
+              (lambda (coeff pow)
+                (* coeff (expt x pow)))
+              (reverse coeffs)
+              (build-list (length coeffs) identity))))))

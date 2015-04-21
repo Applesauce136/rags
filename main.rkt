@@ -95,7 +95,10 @@
                     (set! new-drawable triangle%))
                    ((eq? code #\c)
                     (set! new-drawable circle%))
-                   ))
+                   ((eq? code #\h)
+                    (set! new-drawable hermite%))
+                   ((eq? code #\b)
+                    (set! new-drawable bezier%))))
             
             ((and (char? code)
                   (char-numeric? code)
