@@ -12,6 +12,6 @@
 
 (my-lexer my-port)
 (my-lexer my-port)
-(my-lexer my-port)
-(my-lexer my-port)
-(my-lexer my-port)
+
+(require parser-tools/yacc-to-scheme)
+(trans "mdl.y")
