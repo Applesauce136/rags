@@ -2,7 +2,11 @@
 
 (require parser-tools/lex
          parser-tools/yacc
-         (prefix-in : parser-tools/lex-sre))
+         (prefix-in : parser-tools/lex-sre)
+
+         "commands.rkt")
+
+(provide get-commands)
 
 ;; LEXER
 ;; ----------------------------------------------------------------
@@ -86,3 +90,8 @@
           (cons result (get-commands in))
           '()))))
 ;; ================================================================
+
+(define-namespace-anchor a)
+(define ns (namespace-anchor->namespace a))
+(map (curryr eval ns) (call-with-input-file "test.mdl"
+                        get-commands))
