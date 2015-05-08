@@ -3,6 +3,7 @@
 (require parser-tools/lex
          parser-tools/yacc
          (prefix-in : parser-tools/lex-sre)
+         racket/draw
 
          "commands.rkt")
 
@@ -48,6 +49,16 @@
 
 ;; PARSER
 ;; ----------------------------------------------------------------
+
+(define stack (list (matrix-identity)))
+(define my-bitmap-dc (new bitmap-dc% (bitmap (make-bitmap 500 500))))
+(send my-bitmap-dc set-background (make-color 0 0 0))
+(send my-bitmap-dc clear)
+(define draw-pixel
+  (lambda (pixel)
+    (send my-bitmap-dc set-pixel
+          (first pixel) (second pixel) '(0 255 255))))
+
 (define my-parser
   (parser 
    (start start) 
@@ -63,20 +74,43 @@
      ((command) $1))
     
     (command
-     ((PUSH) `(push))
-     ((POP) `(pop))
-     ((MOVE NUMBER NUMBER NUMBER) `(move ,$2 ,$3 ,$4))
-     ((SCALE NUMBER NUMBER NUMBER) `(scale ,$2 ,$3 ,$4))
-     ((ROTATE STRING NUMBER) `(rotate ,$2 ,$3))
+     ((PUSH)
+      `(set! stack
+         (cons (matrix-clone (first stack))
+               stack)))
+     ((POP)
+      `(set! stack (rest stack)))
+     ((MOVE NUMBER NUMBER NUMBER)
+      `(set! stack (cons (matrix-multiply (move ,$2 ,$3 ,$4)
+                                          (first stack))
+                         (rest stack))))
+     ((SCALE NUMBER NUMBER NUMBER)
+      `(set! stack (cons (matrix-multiply (scale ,$2 ,$3 ,$4)
+                                          (first stack))
+                         (rest stack))))
+     ((ROTATE STRING NUMBER)
+      `(set! stack (cons (matrix-multiply (rotate ,$2 ,$3)
+                                          (first stack))
+                         (rest stack))))
      ((BOX NUMBER NUMBER NUMBER
-           NUMBER NUMBER NUMBER) `(box ,$2 ,$3 ,$4 ,$5 ,$6 ,$7))
+           NUMBER NUMBER NUMBER)
+      `(map draw-pixel
+            (box (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
      ((SPHERE NUMBER NUMBER NUMBER
-              NUMBER) `(sphere  ,$2 ,$3 ,$4 ,$5))
+              NUMBER)
+      `(map draw-pixel
+            (sphere (first stack) ,$2 ,$3 ,$4 ,$5)))
      ((TORUS NUMBER NUMBER NUMBER
-             NUMBER NUMBER) `(torus ,$2 ,$3 ,$4 ,$5 ,$6))
+             NUMBER NUMBER)
+      `(map draw-pixel
+            (torus (first stack) ,$2 ,$3 ,$4 ,$5 ,$6)))
      ((LINE NUMBER NUMBER NUMBER
-            NUMBER NUMBER NUMBER) `(line ,$2 ,$3 ,$4 ,$5 ,$6 ,$7))
-     ((SAVE STRING) `(save ,$2))))))
+            NUMBER NUMBER NUMBER)
+      `(map draw-pixel
+            (line (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
+     ((SAVE STRING)
+      `(send (send my-bitmap-dc get-bitmap)
+             save-file ,$2 'png))))))
 ;; ================================================================
 
 ;; RUN
@@ -93,5 +127,6 @@
 
 (define-namespace-anchor a)
 (define ns (namespace-anchor->namespace a))
-(map (curryr eval ns) (call-with-input-file "test.mdl"
-                        get-commands))
+
+(define trash (map (curryr eval ns) (call-with-input-file "test.mdl"
+                                      get-commands)))
