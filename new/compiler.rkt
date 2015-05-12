@@ -50,7 +50,7 @@
 ;; PARSER
 ;; ----------------------------------------------------------------
 
-(define stack (list (matrix-identity)))
+(define stack (list identity))
 (define my-bitmap-dc (new bitmap-dc% (bitmap (make-bitmap 500 500))))
 (send my-bitmap-dc set-background (make-color 0 0 0))
 (send my-bitmap-dc clear)
@@ -76,21 +76,21 @@
     (command
      ((PUSH)
       `(set! stack
-         (cons (matrix-clone (first stack))
+         (cons (first stack)
                stack)))
      ((POP)
       `(set! stack (rest stack)))
      ((MOVE NUMBER NUMBER NUMBER)
-      `(set! stack (cons (matrix-multiply (move ,$2 ,$3 ,$4)
-                                          (first stack))
+      `(set! stack (cons (compose (move ,$2 ,$3 ,$4)
+                                  (first stack))
                          (rest stack))))
      ((SCALE NUMBER NUMBER NUMBER)
-      `(set! stack (cons (matrix-multiply (scale ,$2 ,$3 ,$4)
-                                          (first stack))
+      `(set! stack (cons (compose (scale ,$2 ,$3 ,$4)
+                                  (first stack))
                          (rest stack))))
      ((ROTATE STRING NUMBER)
-      `(set! stack (cons (matrix-multiply (rotate ,$2 ,$3)
-                                          (first stack))
+      `(set! stack (cons (compose (rotate ,$2 ,$3)
+                                  (first stack))
                          (rest stack))))
      ((BOX NUMBER NUMBER NUMBER
            NUMBER NUMBER NUMBER)
@@ -128,5 +128,7 @@
 (define-namespace-anchor a)
 (define ns (namespace-anchor->namespace a))
 
-(define trash (map (curryr eval ns) (call-with-input-file "test.mdl"
-                                      get-commands)))
+(define trash
+  (map (curryr eval ns)
+       (call-with-input-file "test.mdl"
+         get-commands)))
