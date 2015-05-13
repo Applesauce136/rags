@@ -90,7 +90,7 @@
                                   (first stack))
                          (rest stack))))
      ((ROTATE STRING NUMBER)
-      `(set! stack (cons (compose (rotate ,$2 ,$3)
+      `(set! stack (cons (compose (rotate (string->symbol ,$2) ,$3)
                                   (first stack))
                          (rest stack))))
      ((BOX NUMBER NUMBER NUMBER

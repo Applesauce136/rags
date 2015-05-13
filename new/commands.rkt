@@ -39,7 +39,10 @@
                       (* y (sin angle)))
                    (+ (* x (sin angle))
                       (* y (cos angle)))
-                   z))))))
+                   z))
+            (else
+             (printf "invalid axis: ~s~n" axis)
+             pixel)))))
 
 (define box
   (lambda (transforms x y z width height depth)
