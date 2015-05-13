@@ -52,13 +52,19 @@
 
 (define stack '())
 (set! stack (cons identity stack))
-(define my-bitmap-dc (new bitmap-dc% (bitmap (make-bitmap 500 500))))
+(define width 500)
+(define height 500)
+(define my-bitmap-dc (new bitmap-dc% (bitmap (make-bitmap width height))))
 (send my-bitmap-dc set-background (make-color 0 0 0))
 (send my-bitmap-dc clear)
 (define draw-pixel
   (lambda (pixel)
-    (send my-bitmap-dc set-pixel
-          (first pixel) (second pixel) (make-color 0 255 255))))
+    (when (and (< -1 (first pixel) width)
+               (< -1 (second pixel) height))
+      (send my-bitmap-dc set-pixel
+            (exact-floor (first pixel))
+            (exact-floor (second pixel))
+            (make-color 255 255 0)))))
 
 (define my-parser
   (parser 
