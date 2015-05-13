@@ -9,15 +9,14 @@
   (lambda (x y z)
     (lambda (pixel)
       (map +
-           pixel '(x y z)))))
+           pixel (list x y z)))))
 (define scale
   (lambda (x y z)
     (lambda (pixel)
       (map *
-           pixel '(x y z)))))
+           pixel (list x y z)))))
 (define rotate
-  (lambda (axis_s angle_d)
-    (define axis (string->symbol axis_s))
+  (lambda (axis angle_d)
     (define angle (degrees->radians angle_d))
     (lambda (pixel)
       (define x (first pixel))
@@ -44,73 +43,76 @@
 
 (define box
   (lambda (transforms x y z width height depth)
-    (append
-     (map (lambda (triangle)
-            (apply (compose draw-triangle transforms)
-                   triangle))
-          `( ;; front face
-            ((,x ,y ,z)
-             (,(+ x width) ,(+ y height) ,z)
-             (,(+ x width) ,y ,z))
-            ((,x ,y ,z)
-             (,x ,(+ y height) ,z)
-             (,(+ x width) ,(+ y height) ,z))
-            ;; back face
-            ((,(+ x width) ,(+ y height) ,(+ z depth))
-             (,x ,y ,(+ z depth))
-             (,(+ x width) ,y ,(+ z depth)))
-            ((,(+ x width) ,(+ y height) ,(+ z depth))
-             (,x ,(+ y height) ,(+ z depth))
-             (,x ,y ,(+ z depth)))
-            ;; top face
-            ((,x ,y ,z)
-             (,(+ x width) ,y ,z)
-             (,(+ x width) ,y ,(+ z depth)))
-            ((,x ,y ,z)
-             (,(+ x width) ,y ,(+ z depth))
-             (,x ,y ,(+ z depth)))
-            ;; bottom face
-            ((,(+ x width) ,(+ y height) ,(+ z depth))
-             (,x ,(+ y height) ,(+ z depth))
-             (,(+ x width) ,(+ y height) ,z))
-            ((,(+ x width) ,(+ y height) ,z)
-             (,x ,(+ y height) ,z)
-             (,x ,(+ y height) ,(+ z depth)))
-            ;; left face
-            ((,x ,y ,z)
-             (,x ,y ,(+ z depth))
-             (,x ,(+ y height) ,(+ z depth)))
-            ((,x ,y ,z)
-             (,x ,(+ y height) ,(+ z depth))
-             (,x ,(+ y height) ,z))
-            ;; right face
-            ((,(+ x width) ,(+ y height) ,(+ z depth))
-             (,(+ x width) ,y ,z)
-             (,(+ x width) ,(+ y height) ,z))
-            ((,(+ x width) ,(+ y height) ,(+ z depth))
-             (,(+ x width) ,y ,(+ z depth))
-             (,(+ x width) ,y ,z)))))))
+    (append-map (lambda (triangle)
+                  (apply draw-triangle
+                         (map transforms
+                              triangle)))
+                `(;; front face
+                  ((,x ,y ,z)
+                   (,(+ x width) ,(+ y height) ,z)
+                   (,(+ x width) ,y ,z))
+                  ((,x ,y ,z)
+                   (,x ,(+ y height) ,z)
+                   (,(+ x width) ,(+ y height) ,z))
+                  ;; back face
+                  ((,(+ x width) ,(+ y height) ,(+ z depth))
+                   (,x ,y ,(+ z depth))
+                   (,(+ x width) ,y ,(+ z depth)))
+                  ((,(+ x width) ,(+ y height) ,(+ z depth))
+                   (,x ,(+ y height) ,(+ z depth))
+                   (,x ,y ,(+ z depth)))
+                  ;; top face
+                  ((,x ,y ,z)
+                   (,(+ x width) ,y ,z)
+                   (,(+ x width) ,y ,(+ z depth)))
+                  ((,x ,y ,z)
+                   (,(+ x width) ,y ,(+ z depth))
+                   (,x ,y ,(+ z depth)))
+                  ;; bottom face
+                  ((,(+ x width) ,(+ y height) ,(+ z depth))
+                   (,x ,(+ y height) ,(+ z depth))
+                   (,(+ x width) ,(+ y height) ,z))
+                  ((,(+ x width) ,(+ y height) ,z)
+                   (,x ,(+ y height) ,z)
+                   (,x ,(+ y height) ,(+ z depth)))
+                  ;; left face
+                  ((,x ,y ,z)
+                   (,x ,y ,(+ z depth))
+                   (,x ,(+ y height) ,(+ z depth)))
+                  ((,x ,y ,z)
+                   (,x ,(+ y height) ,(+ z depth))
+                   (,x ,(+ y height) ,z))
+                  ;; right face
+                  ((,(+ x width) ,(+ y height) ,(+ z depth))
+                   (,(+ x width) ,y ,z)
+                   (,(+ x width) ,(+ y height) ,z))
+                  ((,(+ x width) ,(+ y height) ,(+ z depth))
+                   (,(+ x width) ,y ,(+ z depth))
+                   (,(+ x width) ,y ,z))))))
 
 (define sphere
   (lambda (transforms x y z radius)
     (torus transforms x y z 0 radius)))
 (define torus
   (lambda (transforms x y z rad-t rad-c)
-    (define t (make-circle rad-t 0 0 rad-c))
+    (define circle (make-circle rad-t 0 0 rad-c steps))
     (append
      (map (lambda (triangle)
-            (apply (compose draw-triangle (move x y z) transforms)
-                   triangle))
+            (apply draw-triangle
+                   (map transforms
+                        triangle)))
           (append-map
            (lambda (step)
-             (define t1
-               (map (rotate 'y (* 360 (/ step steps)))
-                    t))
-             (define t2
-               (map (rotate 'y (* 360 (/ (+ step 1) steps)))
-                    t)) 
+             (define circle1
+               (map (compose (move x y z) (rotate 'y (* 360 (/ step steps))))
+                   circle))
+             (define circle2
+               (map (compose (move x y z) (rotate 'y (* 360 (/ (+ step 1) steps))))
+                   circle)) 
              (map list
-                  t1 (append (rest t1) (list (first t1))) t2))
+                 circle1
+                 (append (rest circle1) (list (first circle1)))
+                 circle2))
            (build-list steps identity))))))
 (define line
   (lambda (transforms x0 y0 z0 x1 y1 z1)
@@ -136,8 +138,14 @@
     (append-map draw-line starts ends)))
 
 (define draw-line
-  (lambda (x0 y0 z0 x1 y1 z1)
-    (let* ((dx (abs (- x1 x0)))
+  (lambda (pt0 pt1)
+    (let* ((x0 (first pt0))
+           (x1 (first pt1))
+           (y0 (second pt0))
+           (y1 (second pt1))
+           (z0 (third pt0))
+           (z1 (third pt1))
+           (dx (abs (- x1 x0)))
            (dy (abs (- y1 y0)))
            (pri (cond ((<= dy dx) 'x)
                       ((<= dx dy) 'y)))
@@ -173,6 +181,6 @@
                             ((eq? pri 'y) (list pri-c sec-c z0)))
                       pts)))
           ((= pri-c pri-f)
-           (cons (cond ((eq? pri 'x) (list sec-f pri-f z))
-                       ((eq? pri 'y) (list pri-f sec-f z)))
+           (cons (cond ((eq? pri 'x) (list sec-f pri-f z0))
+                       ((eq? pri 'y) (list pri-f sec-f z0)))
                  pts))))))

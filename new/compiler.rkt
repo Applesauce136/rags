@@ -50,14 +50,15 @@
 ;; PARSER
 ;; ----------------------------------------------------------------
 
-(define stack (list identity))
+(define stack '())
+(set! stack (cons identity stack))
 (define my-bitmap-dc (new bitmap-dc% (bitmap (make-bitmap 500 500))))
 (send my-bitmap-dc set-background (make-color 0 0 0))
 (send my-bitmap-dc clear)
 (define draw-pixel
   (lambda (pixel)
     (send my-bitmap-dc set-pixel
-          (first pixel) (second pixel) '(0 255 255))))
+          (first pixel) (second pixel) (make-color 0 255 255))))
 
 (define my-parser
   (parser 
@@ -128,7 +129,8 @@
 (define-namespace-anchor a)
 (define ns (namespace-anchor->namespace a))
 
-(define trash
+(display "Enter the name of your file: ")
+(define trash ; so that you don't print it
   (map (curryr eval ns)
-       (call-with-input-file "test.mdl"
+       (call-with-input-file (symbol->string (read))
          get-commands)))
