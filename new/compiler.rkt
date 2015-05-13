@@ -3,9 +3,7 @@
 (require parser-tools/lex
          parser-tools/yacc
          (prefix-in : parser-tools/lex-sre)
-         racket/draw
-
-         "commands.rkt")
+         racket/draw)
 
 (provide get-commands)
 
@@ -49,22 +47,6 @@
 
 ;; PARSER
 ;; ----------------------------------------------------------------
-
-(define stack '())
-(set! stack (cons identity stack))
-(define width 500)
-(define height 500)
-(define my-bitmap-dc (new bitmap-dc% (bitmap (make-bitmap width height))))
-(send my-bitmap-dc set-background (make-color 0 0 0))
-(send my-bitmap-dc clear)
-(define draw-pixel
-  (lambda (pixel)
-    (when (and (< -1 (first pixel) width)
-               (< -1 (second pixel) height))
-      (send my-bitmap-dc set-pixel
-            (exact-floor (first pixel))
-            (exact-floor (second pixel))
-            (make-color 255 255 0)))))
 
 (define my-parser
   (parser 
@@ -131,12 +113,3 @@
           (cons result (get-commands in))
           '()))))
 ;; ================================================================
-
-(define-namespace-anchor a)
-(define ns (namespace-anchor->namespace a))
-
-(display "Enter the name of your file: ")
-(define trash ; so that you don't print it
-  (map (curryr eval ns)
-       (call-with-input-file (symbol->string (read))
-         get-commands)))
