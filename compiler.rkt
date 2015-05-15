@@ -83,20 +83,20 @@
                          (rest stack))))
      ((BOX NUMBER NUMBER NUMBER
            NUMBER NUMBER NUMBER)
-      `(map draw-pixel
-            (box (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
+      `(draw-pixels
+        (make-box (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
      ((SPHERE NUMBER NUMBER NUMBER
               NUMBER)
-      `(map draw-pixel
-            (sphere (first stack) ,$2 ,$3 ,$4 ,$5)))
+      `(draw-pixels
+        (make-sphere (first stack) ,$2 ,$3 ,$4 ,$5)))
      ((TORUS NUMBER NUMBER NUMBER
              NUMBER NUMBER)
-      `(map draw-pixel
-            (torus (first stack) ,$2 ,$3 ,$4 ,$5 ,$6)))
+      `(draw-pixels
+        (make-torus (first stack) ,$2 ,$3 ,$4 ,$5 ,$6)))
      ((LINE NUMBER NUMBER NUMBER
             NUMBER NUMBER NUMBER)
-      `(map draw-pixel
-            (line (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
+      `(draw-pixels
+        (make-line (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
      ((SAVE STRING)
       `(send (send my-bitmap-dc get-bitmap)
              save-file ,$2 'png))))))
