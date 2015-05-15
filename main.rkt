@@ -1,185 +1,35 @@
 #lang racket
 
-(require racket/gui/base
-         "polygons.rkt"
-         "polyhedra.rkt")
+(require racket/draw
+         "commands.rkt"
+         "compiler.rkt")
 
-(define width 800)
-(define height 600)
+(define stack '())
+(set! stack (cons identity stack))
+(define width 500)
+(define height 500)
+(define my-bitmap-dc (new bitmap-dc% (bitmap (make-bitmap width height))))
+(send my-bitmap-dc set-background (make-color 0 0 0))
+(send my-bitmap-dc clear)
+(define draw-pixels
+  (lambda (gen)
+    (let draw-pixel
+        ((val (gen)))      
+      (if val
+          (begin
+            (call-with-values (lambda () (apply values (map exact-floor val)))
+              (lambda (x y z)
+                ;; (printf "x: ~a    y: ~a~n" x y)
+                (when (and (< -1 x width)
+                           (< -1 y height))
+                  (send my-bitmap-dc set-pixel
+                        x y (make-color 255 255 0)))))
+            (draw-pixel (gen)))
+          #f))))
 
-(define drawables '())
-(define current #f)
-(define cur-index -1)
-(define move-current
-  (lambda (index)
-    (when current
-      (send current set-index -1))
-    (when (< index (length drawables))
-      (set! current (if (<= index -1)
-                        #f
-                        (list-ref drawables index)))
-      (set! cur-index index))))
-
-(define adding? #f)
-(define add-drawable
-  (lambda (drawable)
-    (set! drawables (cons drawable drawables))
-    (set! adding? #f)
-    (set! current (first drawables))))
-(define new-drawable line%)
-
-(define my-bitmap (make-bitmap width height))
-(define my-bitmap-dc (new bitmap-dc% (bitmap my-bitmap)))
-(define update-bitmap
-  (lambda ((pt #f))
-    (send my-bitmap-dc clear)
-    (map
-     (lambda (drawable)
-       (define color (make-color
-                      (if (eq? current drawable)
-                          255 0) 0 0))
-       (map
-        (lambda (pt)
-          (define x (first pt))
-          (define y (second pt))
-          (when (and (< 0 x width)
-                     (< 0 y height))
-              (send my-bitmap-dc set-pixel
-                    x y color)))
-        (send drawable draw
-              (if (eq? current drawable)
-                  pt #f))))
-     drawables)))
-(define update-adding
-  (lambda ()
-    (send adding set-label
-          (if adding?
-              (format "ADDING A:~n~a" (send (new new-drawable (init-pt '(0 0 0))) name))
-              ""))))
-(define update-names
-  (lambda ()
-    (send names set-label
-          (string-join
-           #:before-first "Shapes:\n"
-           (map
-            (lambda (drawable)
-              (string-append
-               (if (eq? current drawable)
-                   "*" "")
-               (send drawable name)))
-            drawables)
-           "\n"))))
-(define update-description
-  (lambda ()
-    (send description set-label
-          (if current
-              (send current description)
-              ""))))
-
-(define my-canvas%
-  (class canvas%
-
-    (super-new)
-    
-    (define old-loc '(0 0 0))
-    (define can-click? #t)
-    
-    (define/override (on-char char-event)
-      (define code (send char-event get-key-code))
-      (cond ((eq? code 'escape)
-             (set! adding? #f)
-             (move-current -1))
-            (adding?
-             (cond ((eq? code #\l)
-                    (set! new-drawable line%))
-                   ((eq? code #\t)
-                    (set! new-drawable triangle%))
-                   ((eq? code #\c)
-                    (set! new-drawable circle%))
-                   ((eq? code #\h)
-                    (set! new-drawable hermite%))
-                   ((eq? code #\b)
-                    (set! new-drawable bezier%))
-                   ((eq? code #\d)
-                    (set! new-drawable torus%))))
-            
-            ((and (char? code)
-                  (char-numeric? code)
-                  current)
-             (send current set-index
-                   (- (char->integer code)
-                      (char->integer #\1))))
-            
-            ((eq? code #\a)
-             (set! adding? #t)
-             (move-current -1))
-            
-            ((eq? code #\tab)
-             (move-current (+ cur-index
-                              (if (send char-event get-shift-down)
-                                  -1 1)))))
-      (send this refresh))
-    (define/override (on-event mouse-event)
-      (define loc (list (send mouse-event get-x)
-                        (send mouse-event get-y)
-                        0))
-      (cond ((and (send mouse-event get-right-down)
-                  current)
-             (send current rotate-y
-                   (- (send mouse-event get-x) (first old-loc)))
-             (send current rotate-x
-                   (- (send mouse-event get-y) (second old-loc))))
-            
-            ((and (send mouse-event get-middle-down)
-                  current)
-             (send current translate
-                   (- (send mouse-event get-x) (first old-loc))
-                   (- (send mouse-event get-y) (second old-loc))
-                   0))
-            ((send mouse-event get-left-down) 
-             (when can-click?
-               (when adding?
-                 (add-drawable (new new-drawable (init-pt loc))))
-               (when current
-                 (send current set-point loc)
-                 (unless (send current inc-index)
-                   (move-current -1)))
-               (set! can-click? #f))
-             (set! can-click? #t)))
-      (send location set-label
-            (format "~a" loc))
-      (set! old-loc loc)
-      (send this refresh))
-    (define/override (on-paint)
-      (update-bitmap old-loc)
-      (update-names)
-      (update-adding)
-      (update-description)
-      (send (send my-canvas get-dc) draw-bitmap my-bitmap 0 0))))
-
-(define frame (new frame%
-                   (label "DRAW THING")))
-
-(define main-panel (new vertical-panel% (parent frame)))
-(define drawing-panel (new horizontal-panel% (parent main-panel)))
-
-(define my-canvas
-  (new my-canvas% (parent drawing-panel)
-       (min-width width)
-       (min-height height)))
-
-(define control-panel (new vertical-panel% (parent drawing-panel)))
-(define location (new message% (parent control-panel)
-                      (label "hello!")
-                      (auto-resize #t)))
-(define adding (new message% (parent control-panel)
-                    (label "")
-                    (auto-resize #t)))
-(define names (new message% (parent control-panel)
-                   (label "")
-                   (auto-resize #t)))
-(define description (new message% (parent main-panel)
-                         (label "")
-                         (auto-resize #t)))
-
-(send frame show #t)
+(display "Enter the name of your file: ")
+(define-namespace-anchor commands-ns-anchor)
+(define trash ; so that you don't print it
+  (map (curryr eval (namespace-anchor->namespace commands-ns-anchor))
+       (call-with-input-file (symbol->string (read))
+         get-commands)))
