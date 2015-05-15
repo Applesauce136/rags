@@ -27,7 +27,8 @@
             (draw-pixel (gen)))
           #f))))
 
-(display "Enter the name of your file: ")
+(when (terminal-port? (current-input-port))
+  (display "Enter the name of your file: "))
 (define-namespace-anchor commands-ns-anchor)
 (define trash ; so that you don't print it
   (map (curryr eval (namespace-anchor->namespace commands-ns-anchor))

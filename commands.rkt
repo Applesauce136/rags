@@ -5,7 +5,7 @@
 (provide move scale rotate
          make-box make-sphere make-torus make-line)
 
-(define steps 10)
+(define steps 30)
 
 (define move
   (lambda (x y z)
@@ -46,27 +46,15 @@
                       (printf "invalid axis: ~s~n" axis)
                       pixel))))))))
 
-(define mash-generators
-  (lambda gens
-    ;; mashes together a list of generators into one big one
-    (generator
-     ()
-     (let one-line ((lines gens))
-       (if (null? lines)
-           #f
-           (begin
-             (let ((val ((car lines))))
-               (cond (val (begin (yield val)
-                                 (one-line lines)))
-                     (else (one-line (cdr lines)))))))))))
-
 (define make-box
   (lambda (transforms x y z width height depth)
     (define big-gen
       (apply mash-generators
              (map (lambda (triangle)
-                    (apply draw-triangle
-                           (map transforms triangle)))
+                    (define transformed (map transforms triangle))
+                    (if (frontface? transformed)
+                        (apply draw-triangle transformed)
+                        (generator () (yield #f))))
                   `( ;; front face
                     ((,x ,y ,z)
                      (,(+ x width) ,(+ y height) ,z)
@@ -117,11 +105,41 @@
                   (one (big-gen)))
            #f)))))
 
+(define mash-generators
+  (lambda gens
+    ;; mashes together a list of generators into one big one
+    (generator
+     ()
+     (let one-line ((lines gens))
+       (if (null? lines)
+           #f
+           (begin
+             (let ((val ((car lines))))
+               (cond (val (begin (yield val)
+                                 (one-line lines)))
+                     (else (one-line (cdr lines)))))))))))
+
 (define make-sphere
   (lambda (transforms x y z radius)
     (make-torus transforms x y z 0 radius)))
+
 (define make-torus
   (lambda (transforms x y z rad-t rad-c)
+    (define circle-generator
+      (lambda (bigstep init offset)
+        (generator
+         ()
+         (let pixel
+             ((step init))
+           (if (= step (+ steps init))
+               #f
+               (begin
+                 (yield ((compose transforms
+                                  (rotate 'y (* 360 (/ (+ bigstep offset) steps))))
+                         (list (+ rad-t (* rad-c (cos (* 2 pi (/ step steps)))))
+                               (+ 0 (* rad-c (sin (* 2 pi (/ step steps)))))
+                               0)))
+                 (pixel (+ step 1))))))))
     (generator
      ()
      (let one-ring
@@ -132,127 +150,25 @@
              (call-with-values
                  (lambda ()
                    (values
-                    (generator
-                     ()
-                     (let pixel
-                         ((step 0))
-                       (if (= step steps)
-                           #f
-                           (begin
-                             (yield ((compose transforms
-                                              (rotate 'y (* 360 (/ bigstep steps))))
-                                     (list (+ rad-t (* rad-c (cos (* 2 pi (/ step steps)))))
-                                           (+ 0 (* rad-c (sin (* 2 pi (/ step steps)))))
-                                           0)))
-                             (pixel (+ step 1))))))
-                    (generator
-                     ()
-                     (let pixel
-                         ((step 1))
-                       (if (= step (+ steps 1))
-                           #f
-                           (begin
-                             (yield ((compose transforms
-                                              (rotate 'y (* 360 (/ bigstep steps))))
-                                     (list (+ rad-t (* rad-c (cos (* 2 pi (/ step steps)))))
-                                           (+ 0 (* rad-c (sin (* 2 pi (/ step steps)))))
-                                           0)))
-                             (pixel (+ step 1))))))
-                    (generator
-                     ()
-                     (let pixel
-                         ((step 0))
-                       (if (= step (+ steps 1))
-                           #f
-                           (begin
-                             (yield ((compose transforms
-                                              (rotate 'y (* 360 (/ (+ bigstep 1) steps))))
-                                     (list (+ rad-t (* rad-c (cos (* 2 pi (/ step steps)))))
-                                           (+ 0 (* rad-c (sin (* 2 pi (/ step steps)))))
-                                           0)))
-                             (pixel (+ step 1))))))))
+                    (circle-generator bigstep 0 0)
+                    (circle-generator bigstep 1 0)
+                    (circle-generator bigstep 0 1)))
                (lambda (c0 c1 c2)
                  (let one-triangle
                      ((p0 (c0)) (p1 (c1)) (p2 (c2)))
-                   (define triangle (draw-triangle p0 p1 p2))
-                   (if (and p0 p1 p2)
-                       (begin (let one-pt
-                                  ((val (triangle)))
-                                (if val
-                                    (begin (yield val)
-                                           (one-pt (triangle)))
-                                    #f))
-                              (one-triangle (c0) (c1) (c2)))
+                   (if (and (and p0 p1 p2)
+                            (frontface? (list p0 p1 p2)))
+                       (let ((triangle (draw-triangle p0 p1 p2)))
+                         (begin (let one-pt
+                                    ((val (triangle)))
+                                  (if val
+                                      (begin (yield val)
+                                             (one-pt (triangle)))
+                                      #f))
+                                (one-triangle (c0) (c1) (c2))))
                        #f))))
-             (one-ring (+ bigstep 1))))))
-    ;; (generator
-    ;;  ()
-    ;;  (define c0 (make-circle 0 0 rad-t rad-c))
-    ;;  (define c1 (make-circle 0 0 rad-t rad-c))
-    ;;  (define c2
-    ;;    (generator
-    ;;     ()
-    ;;     (define circle (make-circle 0 0 rad-t rad-c))
-    ;;     (define rot (rotate y (* 360 (/ 1 steps))))
-    ;;     (let one-pt ((val (circle)))
-    ;;       (if val
-    ;;           (begin (yield val)
-    ;;                  (one-pt (rot (circle))))
-    ;;           #f))))
-    ;;  (c1)
-    ;;  (let one-thing ((triangle (draw-triangle (c0) (c1) (c2))))
-    ;;    (if triangle
-    ;;        (begin
-    ;;          (let one-other-thing ((val (triangle)))
-    ;;            (if val
-    ;;                (begin (yield val)
-    ;;                       (one-other-thing (triangle)))
-    ;;                #f))
-    ;;          (one-thing (draw-triangle (c0) (c1) (c2))))
-    ;;        #f))
-     
-    ;;  ;; (define circle-generator-maker
-    ;;  ;;   (lambda (offset)
-    ;;  ;;     (generator
-    ;;  ;;      ()
-    ;;  ;;      (let circle ((step offset))
-    ;;  ;;        (if (= step steps)
-    ;;  ;;            #f
-    ;;  ;;            (begin ((rotate 'y (* 360 (/ step steps))) 
-    ;;  ;;                    (yield-all (make-circle x y z rad-c)))
-    ;;  ;;                   (circle (+ step 1))))))))
-    ;;  ;; (define c0 (circle-generator-maker 0))
-    ;;  ;; (define c1 (circle-generator-maker 0))
-    ;;  ;; (define c2 (circle-generator-maker 1))
-    ;;  ;; (c1)
-    ;;  ;; (yield-all (draw-triangle (yield-all c0)
-    ;;  ;;                           (yield-all c1)
-    ;;  ;;                           (yield-all c2)))
+             (one-ring (+ bigstep 1))))))))
 
-    ;;  ;; (generator
-    ;;  ;; ()
-     
-    ;;  ;; (yield-all circle-generator))
-    ;;  ;;     (append
-    ;;  ;;      (map (lambda (triangle)
-    ;;  ;;             (apply draw-triangle
-    ;;  ;;                    (map transforms
-    ;;  ;;                         triangle)))
-    ;;  ;;           (append-map
-    ;;  ;;            (lambda (step)
-    ;;  ;;              (define circle1
-    ;;  ;;                (map (compose (move x y z) (rotate 'y (* 360 (/ step steps))))
-    ;;  ;;                     circle))
-    ;;  ;;              (define circle2
-    ;;  ;;                (map (compose (move x y z) (rotate 'y (* 360 (/ (+ step 1) steps))))
-    ;;  ;;                     circle)) 
-    ;;  ;;              (map list
-    ;;  ;;                   circle1
-    ;;  ;;                   (append (rest circle1) (list (first circle1)))
-    ;;  ;;                   circle2))
-    ;;  ;;            (build-list steps identity))))
-    ;;      )
-    ))
 (define make-line
   (lambda (transforms x0 y0 z0 x1 y1 z1)
     (draw-line (transforms (list x0 y0 z0))
@@ -263,6 +179,31 @@
     (mash-generators (draw-line pt0 pt1)
                      (draw-line pt1 pt2)
                      (draw-line pt2 pt0))))
+
+(define frontface?
+  (lambda (triangle)
+    (call-with-values (lambda ()
+                        (apply values triangle))
+      (lambda (p0 p1 p2)
+        (call-with-values (lambda ()
+                            (values (map - p1 p0)
+                                    (map - p2 p1)))
+          (lambda (a b)
+            (let ((normal (cross-product a b)))
+              (<= (dot-product normal '(0 0 -1)) 0))))))))
+
+(define cross-product
+  (lambda (a b)
+    (call-with-values (lambda ()
+                        (apply values (append a b)))
+      (lambda (ax ay az bx by bz)
+        (list (- (* ay bz) (* az by))
+              (- (* az bx) (* ax bz))
+              (- (* ax by) (* ay bx)))))))
+
+(define dot-product
+  (lambda (a b)
+    (foldl + 0 (map * a b))))
 
 (define draw-line 
   (lambda (pt0 pt1)
