@@ -156,16 +156,17 @@
                (lambda (c0 c1 c2)
                  (let one-triangle
                      ((p0 (c0)) (p1 (c1)) (p2 (c2)))
-                   (if (and (and p0 p1 p2)
-                            (frontface? (list p0 p1 p2)))
+                   (if (and p0 p1 p2)
                        (let ((triangle (draw-triangle p0 p1 p2)))
-                         (begin (let one-pt
-                                    ((val (triangle)))
-                                  (if val
-                                      (begin (yield val)
-                                             (one-pt (triangle)))
-                                      #f))
-                                (one-triangle (c0) (c1) (c2))))
+                         (begin
+                           (when (frontface? (list p0 p1 p2))
+                             (let one-pt
+                                 ((val (triangle)))
+                               (if val
+                                   (begin (yield val)
+                                          (one-pt (triangle)))
+                                   #f)))
+                           (one-triangle (c0) (c1) (c2))))
                        #f))))
              (one-ring (+ bigstep 1))))))))
 
