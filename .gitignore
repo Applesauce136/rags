@@ -1,6 +1,5 @@
 # rags
-
 *~
 *.ppm
-Makefile
+*.png
 *.mdl
