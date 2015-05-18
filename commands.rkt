@@ -2,22 +2,22 @@
 
 (require racket/generator)
 
-(provide move scale rotate
+(provide move-point scale-point rotate-point
          make-box make-sphere make-torus make-line)
 
 (define steps 30)
 
-(define move
+(define move-point
   (lambda (x y z)
     (lambda (pixel)
       (map +
            pixel (list x y z)))))
-(define scale
+(define scale-point
   (lambda (x y z)
     (lambda (pixel)
       (map *
            pixel (list x y z)))))
-(define rotate
+(define rotate-point
   (lambda (axis angle_d)
     (define angle (degrees->radians angle_d))
     (lambda (pixel)
@@ -135,7 +135,7 @@
                #f
                (begin
                  (yield ((compose transforms
-                                  (rotate 'y (* 360 (/ (+ bigstep offset) steps))))
+                                  (rotate-point 'y (* 360 (/ (+ bigstep offset) steps))))
                          (list (+ rad-t (* rad-c (cos (* 2 pi (/ step steps)))))
                                (+ 0 (* rad-c (sin (* 2 pi (/ step steps)))))
                                0)))

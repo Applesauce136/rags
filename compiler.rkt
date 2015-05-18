@@ -64,42 +64,29 @@
     
     (command
      ((PUSH)
-      `(set! stack
-         (cons (first stack)
-               stack)))
+      '(push))
      ((POP)
-      `(set! stack (rest stack)))
+      '(pop))
      ((MOVE NUMBER NUMBER NUMBER)
-      `(set! stack (cons (compose (move ,$2 ,$3 ,$4)
-                                  (first stack))
-                         (rest stack))))
+      `(move ,$2 ,$3 ,$4))
      ((SCALE NUMBER NUMBER NUMBER)
-      `(set! stack (cons (compose (scale ,$2 ,$3 ,$4)
-                                  (first stack))
-                         (rest stack))))
+      `(scale ,$2 ,$3 ,$4))
      ((ROTATE STRING NUMBER)
-      `(set! stack (cons (compose (rotate (string->symbol ,$2) ,$3)
-                                  (first stack))
-                         (rest stack))))
+     `(rotate (string->symbol ,$2) ,$3))
      ((BOX NUMBER NUMBER NUMBER
            NUMBER NUMBER NUMBER)
-      `(draw-pixels
-        (make-box (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
+      `(box ,$2 ,$3 ,$4 ,$5 ,$6 ,$7))
      ((SPHERE NUMBER NUMBER NUMBER
               NUMBER)
-      `(draw-pixels
-        (make-sphere (first stack) ,$2 ,$3 ,$4 ,$5)))
+      `(sphere ,$2 ,$3 ,$4 ,$5))
      ((TORUS NUMBER NUMBER NUMBER
              NUMBER NUMBER)
-      `(draw-pixels
-        (make-torus (first stack) ,$2 ,$3 ,$4 ,$5 ,$6)))
+      `(torus ,$2 ,$3 ,$4 ,$5 ,$6))
      ((LINE NUMBER NUMBER NUMBER
             NUMBER NUMBER NUMBER)
-      `(draw-pixels
-        (make-line (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
+      `(line ,$2 ,$3 ,$4 ,$5 ,$6 ,$7))
      ((SAVE STRING)
-      `(send (send my-bitmap-dc get-bitmap)
-             save-file ,$2 'png))))))
+      `(save ,$2))))))
 ;; ================================================================
 
 ;; RUN
