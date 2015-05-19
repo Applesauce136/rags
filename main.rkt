@@ -1,17 +1,17 @@
 #lang racket
 
 (require racket/draw
+         racket/generator
+         
          "commands.rkt"
-         "compiler.rkt")
+         "compiler.rkt"
+         "format.rkt")
 
 ;; BITMAP
 ;; ----------------------------------------------------------------
-;; (define width 500)
-;; (define height 500)
 (define my-bitmap-dc (new bitmap-dc% (bitmap
                                       (make-bitmap 500 500))))
 (send my-bitmap-dc set-background (make-color 0 0 0))
-(send my-bitmap-dc clear)
 (define draw-pixels
   (lambda (gen)
     (call-with-values (lambda ()
@@ -25,7 +25,6 @@
                                     (apply values
                                            (map exact-floor val)))
                   (lambda (x y z)
-                    ;; (printf "x: ~a    y: ~a~n" x y)
                     (when (and (< -1 x width)
                                (< -1 y height))
                       (send my-bitmap-dc set-pixel
@@ -42,14 +41,14 @@
 ;; ----------------------------------------------------------------
 (define vary
   (lambda (vary-name start end min max)
-    '(do ((index ,$3 (+ index 1))
-          (value ,$5 (+ value (* (/ (- index ,$3)
-                                    (- ,$4 ,$3))
-                                 ,$6))))
-         ((= index ,$4) (hash-set! (vector-ref varys index)
-                                   (string->symbol ,$2) value))
-       (hash-set! (vector-ref varys index)
-                  (string->symbol ,$2) value))))
+    (do ((index start (+ index 1))
+         (value min (* (/ (- index start)
+                          (- end start))
+                       (- max min))))
+        ((= index end) (hash-set! (vector-ref knobs index)
+                                  vary-name value))
+      (hash-set! (vector-ref knobs index)
+                 vary-name value))))
 ;; ================================================================
 
 ;; TRANSFORMATIONS
@@ -111,34 +110,70 @@
 
 ;; MAIN
 ;; ----------------------------------------------------------------
+(define reset
+  (lambda ()
+    (send my-bitmap-dc clear)
+    (set! stack (list identity))))
+
 (when (terminal-port? (current-input-port))
   (display "Enter the name of your file: "))
 
 (define-namespace-anchor commands-ns-anchor)
 (define ns (namespace-anchor->namespace commands-ns-anchor))
+(define my-eval (curryr eval ns))
 
-;; (map (curryr eval ns)
-;;      (call-with-input-file (symbol->string (read))
-;;        get-commands))
-
-(define commands (call-with-input-file (symbol->string (read))
+(define raw-commands (call-with-input-file (symbol->string (read))
        get-commands))
 
-(define frames (cadar ; the second element of the first match
-                (filter (lambda (lst)
-                          (eq? (car lst) 'frames))
-                        commands)))
-(define basename (cadar ; same thing
-                  (filter (lambda (lst)
-                            (eq? (car lst) 'basename))
-                          commands)))
+(define frames (filter (lambda (lst)
+                         (eq? (car lst) 'frames))
+                       raw-commands))
+(define basename (filter (lambda (lst)
+                           (eq? (car lst) 'basename))
+                         raw-commands))
 (define varys (filter (lambda (lst)
                         (eq? (car lst) 'vary))
-                      commands))
+                      raw-commands))
+(define loop-commands (filter (lambda (lst)
+                                (memq (car lst)
+                                      '(push pop
+                                             move scale rotate
+                                             box sphere torus line)))
+                              raw-commands))
 
-(printf "FRAMES: ~a~n" frames)
-(printf "BASENAME: ~a~n" basename)
-(printf "VARYS: ~a~n" varys)
+(define knobs (for/vector #:length (if (null? frames)
+                                       0
+                                       (cadar frames))
+                          ((frame (in-generator
+                                   (let loop ((index 0))
+                                     (yield index)
+                                     (loop (+ index 1))))))
+                          (make-hasheq `((frame ,frame)))))
 
-(map (curry printf "~a~n") commands)
+(reset)
+(make-directory (cadar basename))
+(current-directory (cadar basename))
+(if (or (null? frames)
+        (null? basename)
+        (null? varys))
+    (map my-eval
+         (filter-not (lambda (lst)
+                       (memq (car lst)
+                             '(vary basename frames)))
+                     raw-commands))
+    (begin
+      (map my-eval varys)
+      (for ((knob knobs))
+        (for ((command loop-commands))
+          (if (and (memq (car command) '(move scale rotate))
+                   (symbol? (my-eval (last command))))
+              (when (hash-has-key? knob (my-eval (last command)))
+                (my-eval (append (drop-right command 1)
+                                 (list (hash-ref knob (my-eval (last command)))))))
+              (my-eval command)))
+        (save (string-append
+               (cadar basename) "_"
+               (pad (car (hash-ref knob 'frame)) (number-length (cadar frames)))
+               ".png"))
+        (reset))))
 ;; ================================================================
