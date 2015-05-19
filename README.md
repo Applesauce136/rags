@@ -1,3 +1,2 @@
-# RAGS
-# The RAcket Graphics for Stuy
-A little Racket engine that will let you draw .ppm files (and more later on).  
+Hi Mr. DW!  I'm finally caught up!
+In fairness, I had to write the lexer and parser myself, which involved a lot of reading.  But still, many apologies for previous delays.

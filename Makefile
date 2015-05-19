@@ -1,2 +1,2 @@
 all:
-	echo "test.mdl" | racket main.rkt
+	racket main.rkt

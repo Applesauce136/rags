@@ -3,7 +3,8 @@
 (require parser-tools/lex
          parser-tools/yacc
          (prefix-in : parser-tools/lex-sre)
-         racket/draw)
+         
+         racket/generator)
 
 (provide get-commands)
 
@@ -13,12 +14,12 @@
   (NUMBER STRING))
 
 (define-empty-tokens et
-  (PUSH
-   POP
-   MOVE SCALE ROTATE
-   BOX SPHERE TORUS LINE
-   SAVE
-   EOF NEWLINE))
+  (FRAMES VARY BASENAME
+          PUSH POP
+          MOVE SCALE ROTATE
+          BOX SPHERE TORUS LINE
+          SAVE
+          EOF NEWLINE))
 
 (define my-lexer
   (lexer ((eof) 'EOF)
@@ -27,10 +28,12 @@
           (my-lexer input-port))
          (#\newline
           (token-NEWLINE))
-         ((:or "PUSH" "POP"
+         ((:or "FRAMES" "VARY" "BASENAME"
+               "PUSH" "POP"
                "MOVE" "SCALE" "ROTATE"
                "BOX" "SPHERE" "TORUS" "LINE"
                "SAVE"
+               "frames" "vary" "basename"
                "push" "pop"
                "move" "scale" "rotate"
                "box" "sphere" "torus" "line"
@@ -40,7 +43,7 @@
               (:or (:: (:+ numeric) (:? #\.) (:* numeric))
                    (:: (:* numeric) (:? #\.) (:+ numeric))))
           (token-NUMBER (string->number lexeme)))
-         ((:+ (:or alphabetic numeric punctuation))
+         ((:+ (:or alphabetic numeric punctuation symbolic))
           (token-STRING lexeme))))
 
 ;; ================================================================
@@ -63,53 +66,55 @@
      ((command) $1))
     
     (command
+     ((FRAMES NUMBER)
+      `(frames ,$2))
+     ((BASENAME STRING)
+      `(basename ,$2))
+     ((VARY STRING NUMBER NUMBER NUMBER NUMBER)
+      `(vary (string->symbol ,$2) ,$3 ,$4 ,$5 ,$6))
      ((PUSH)
-      `(set! stack
-         (cons (first stack)
-               stack)))
+      '(push))
      ((POP)
-      `(set! stack (rest stack)))
+      '(pop))
      ((MOVE NUMBER NUMBER NUMBER)
-      `(set! stack (cons (compose (move ,$2 ,$3 ,$4)
-                                  (first stack))
-                         (rest stack))))
+      `(move ,$2 ,$3 ,$4))
+     ((MOVE NUMBER NUMBER NUMBER STRING)
+      `(move ,$2 ,$3 ,$4 ,$5))
      ((SCALE NUMBER NUMBER NUMBER)
-      `(set! stack (cons (compose (scale ,$2 ,$3 ,$4)
-                                  (first stack))
-                         (rest stack))))
+      `(scale ,$2 ,$3 ,$4))
+     ((SCALE NUMBER NUMBER NUMBER STRING)
+      `(scale ,$2 ,$3 ,$4 ,$5))
      ((ROTATE STRING NUMBER)
-      `(set! stack (cons (compose (rotate (string->symbol ,$2) ,$3)
-                                  (first stack))
-                         (rest stack))))
+     `(rotate (string->symbol ,$2) ,$3))
+     ((ROTATE STRING NUMBER STRING)
+     `(rotate (string->symbol ,$2) ,$3 (string->symbol ,$4)))
      ((BOX NUMBER NUMBER NUMBER
            NUMBER NUMBER NUMBER)
-      `(draw-pixels
-        (make-box (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
+      `(box ,$2 ,$3 ,$4 ,$5 ,$6 ,$7))
      ((SPHERE NUMBER NUMBER NUMBER
               NUMBER)
-      `(draw-pixels
-        (make-sphere (first stack) ,$2 ,$3 ,$4 ,$5)))
+      `(sphere ,$2 ,$3 ,$4 ,$5))
      ((TORUS NUMBER NUMBER NUMBER
              NUMBER NUMBER)
-      `(draw-pixels
-        (make-torus (first stack) ,$2 ,$3 ,$4 ,$5 ,$6)))
+      `(torus ,$2 ,$3 ,$4 ,$5 ,$6))
      ((LINE NUMBER NUMBER NUMBER
             NUMBER NUMBER NUMBER)
-      `(draw-pixels
-        (make-line (first stack) ,$2 ,$3 ,$4 ,$5 ,$6 ,$7)))
+      `(line ,$2 ,$3 ,$4 ,$5 ,$6 ,$7))
      ((SAVE STRING)
-      `(send (send my-bitmap-dc get-bitmap)
-             save-file ,$2 'png))))))
+      `(save ,$2))))))
 ;; ================================================================
 
 ;; RUN
 ;; ----------------------------------------------------------------
 (define get-commands
   (lambda (in)
-    (let ((result (my-parser
-                   (lambda ()
-                     (my-lexer in)))))
+    (let one-match ((result (my-parser
+                             (lambda ()
+                               (my-lexer in)))))
       (if result
-          (cons result (get-commands in))
+          (cons result
+                (one-match (my-parser
+                            (lambda ()
+                              (my-lexer in)))))
           '()))))
 ;; ================================================================
