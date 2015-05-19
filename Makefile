@@ -1,2 +1,2 @@
 all:
-	echo "test.mdl" | racket main.rkt
+	echo "spinning_torus.mdl" | racket main.rkt

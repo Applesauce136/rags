@@ -2,8 +2,7 @@
 
 (require parser-tools/lex
          parser-tools/yacc
-         (prefix-in : parser-tools/lex-sre)
-         racket/draw)
+         (prefix-in : parser-tools/lex-sre))
 
 (provide get-commands)
 
@@ -13,12 +12,12 @@
   (NUMBER STRING))
 
 (define-empty-tokens et
-  (PUSH
-   POP
-   MOVE SCALE ROTATE
-   BOX SPHERE TORUS LINE
-   SAVE
-   EOF NEWLINE))
+  (FRAMES VARY BASENAME
+          PUSH POP
+          MOVE SCALE ROTATE
+          BOX SPHERE TORUS LINE
+          SAVE
+          EOF NEWLINE))
 
 (define my-lexer
   (lexer ((eof) 'EOF)
@@ -27,10 +26,12 @@
           (my-lexer input-port))
          (#\newline
           (token-NEWLINE))
-         ((:or "PUSH" "POP"
+         ((:or "FRAMES" "VARY" "BASENAME"
+               "PUSH" "POP"
                "MOVE" "SCALE" "ROTATE"
                "BOX" "SPHERE" "TORUS" "LINE"
                "SAVE"
+               "frames" "vary" "basename"
                "push" "pop"
                "move" "scale" "rotate"
                "box" "sphere" "torus" "line"
@@ -40,7 +41,7 @@
               (:or (:: (:+ numeric) (:? #\.) (:* numeric))
                    (:: (:* numeric) (:? #\.) (:+ numeric))))
           (token-NUMBER (string->number lexeme)))
-         ((:+ (:or alphabetic numeric punctuation))
+         ((:+ (:or alphabetic numeric punctuation symbolic))
           (token-STRING lexeme))))
 
 ;; ================================================================
@@ -63,16 +64,28 @@
      ((command) $1))
     
     (command
+     ((FRAMES NUMBER)
+      `(frames ,$2))
+     ((BASENAME STRING)
+      `(basename ,$2))
+     ((VARY STRING NUMBER NUMBER NUMBER NUMBER)
+      `(vary (string->symbol ,$2) ,$3 ,$4 ,$5 ,$6))
      ((PUSH)
       '(push))
      ((POP)
       '(pop))
      ((MOVE NUMBER NUMBER NUMBER)
       `(move ,$2 ,$3 ,$4))
+     ((MOVE NUMBER NUMBER NUMBER STRING)
+      `(move ,$2 ,$3 ,$4 ,$5))
      ((SCALE NUMBER NUMBER NUMBER)
       `(scale ,$2 ,$3 ,$4))
+     ((SCALE NUMBER NUMBER NUMBER STRING)
+      `(scale ,$2 ,$3 ,$4 ,$5))
      ((ROTATE STRING NUMBER)
      `(rotate (string->symbol ,$2) ,$3))
+     ((ROTATE STRING NUMBER STRING)
+     `(rotate (string->symbol ,$2) ,$3 (string->symbol ,$4)))
      ((BOX NUMBER NUMBER NUMBER
            NUMBER NUMBER NUMBER)
       `(box ,$2 ,$3 ,$4 ,$5 ,$6 ,$7))
