@@ -4,27 +4,16 @@
          "commands.rkt"
          "compiler.rkt")
 
-<<<<<<< Updated upstream
 ;; BITMAP
 ;; ----------------------------------------------------------------
 ;; (define width 500)
 ;; (define height 500)
 (define my-bitmap-dc (new bitmap-dc% (bitmap
                                       (make-bitmap 500 500))))
-=======
-(define basename "")
-(define varys (vector))
-(define stack '())
-(set! stack (cons identity stack))
-(define width 500)
-(define height 500)
-(define my-bitmap-dc (new bitmap-dc% (bitmap (make-bitmap width height))))
->>>>>>> Stashed changes
 (send my-bitmap-dc set-background (make-color 0 0 0))
 (send my-bitmap-dc clear)
 (define draw-pixels
   (lambda (gen)
-<<<<<<< Updated upstream
     (call-with-values (lambda ()
                         (send my-bitmap-dc get-size))
       (lambda (width height)
@@ -48,35 +37,19 @@
     (send (send my-bitmap-dc get-bitmap)
           save-file filename 'png)))
 ;; ================================================================
-=======
-    (let draw-pixel
-        ((val (gen)))
-      (if val
-          (begin
-            (call-with-values (lambda () (apply values (map exact-floor val)))
-              (lambda (x y z)
-                ;; (printf "x: ~a    y: ~a~n" x y)
-                (when (and (< -1 x width)
-                           (< -1 y height))
-                  (send my-bitmap-dc set-pixel
-                        x y (make-color 255 255 0)))))
-            (draw-pixel (gen)))
-          #f))))
->>>>>>> Stashed changes
 
 ;; ANIMATION
 ;; ----------------------------------------------------------------
-(define frames
-  (lambda (num)
-    '()))
-
-(define basename
-  (lambda (filename)
-    '()))
-
 (define vary
   (lambda (vary-name start end min max)
-    '()))
+    '(do ((index ,$3 (+ index 1))
+          (value ,$5 (+ value (* (/ (- index ,$3)
+                                    (- ,$4 ,$3))
+                                 ,$6))))
+         ((= index ,$4) (hash-set! (vector-ref varys index)
+                                   (string->symbol ,$2) value))
+       (hash-set! (vector-ref varys index)
+                  (string->symbol ,$2) value))))
 ;; ================================================================
 
 ;; TRANSFORMATIONS
@@ -141,27 +114,31 @@
 (when (terminal-port? (current-input-port))
   (display "Enter the name of your file: "))
 
-<<<<<<< Updated upstream
 (define-namespace-anchor commands-ns-anchor)
 (define ns (namespace-anchor->namespace commands-ns-anchor))
 
-(define trash ; so that you don't print it
-  (map (curryr eval ns)
-       (call-with-input-file (symbol->string (read))
-         get-commands)))
-;; ================================================================
-=======
-(printf "Working...~n")
+;; (map (curryr eval ns)
+;;      (call-with-input-file (symbol->string (read))
+;;        get-commands))
 
-(define-namespace-anchor commands-ns-anchor)
-(define ns (namespace-anchor->namespace
-            commands-ns-anchor))
-(call-with-input-file (symbol->string (read))
-  (lambda (in)
-    (define commands (get-commands in))
-    (let one-command ((command (commands)))
-      (if command
-          (begin (eval command ns)
-                 (one-command (commands)))
-          (printf "Done!~n")))))
->>>>>>> Stashed changes
+(define commands (call-with-input-file (symbol->string (read))
+       get-commands))
+
+(define frames (cadar ; the second element of the first match
+                (filter (lambda (lst)
+                          (eq? (car lst) 'frames))
+                        commands)))
+(define basename (cadar ; same thing
+                  (filter (lambda (lst)
+                            (eq? (car lst) 'basename))
+                          commands)))
+(define varys (filter (lambda (lst)
+                        (eq? (car lst) 'vary))
+                      commands))
+
+(printf "FRAMES: ~a~n" frames)
+(printf "BASENAME: ~a~n" basename)
+(printf "VARYS: ~a~n" varys)
+
+(map (curry printf "~a~n") commands)
+;; ================================================================

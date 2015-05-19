@@ -1,8 +1,0 @@
-(do ((index ,$3 (+ index 1))
-            (value ,$5 (+ value (* (/ (- index ,$3)
-                                      (- ,$4 ,$3))
-                                   ,$6))))
-           ((= index ,$4) (hash-set! (vector-ref varys index)
-                                     (string->symbol ,$2) value))
-         (hash-set! (vector-ref varys index)
-                    (string->symbol ,$2) value))
