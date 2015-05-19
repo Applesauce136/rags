@@ -118,12 +118,10 @@
 (when (terminal-port? (current-input-port))
   (display "Enter the name of your file: "))
 
-(define-namespace-anchor commands-ns-anchor)
-(define ns (namespace-anchor->namespace commands-ns-anchor))
-(define my-eval (curryr eval ns))
-
-(define raw-commands (call-with-input-file (symbol->string (read))
+(define filename (symbol->string (read)))
+(define raw-commands (call-with-input-file filename
        get-commands))
+(printf "running file: ~a ...~n" filename)
 
 (define frames (filter (lambda (lst)
                          (eq? (car lst) 'frames))
@@ -149,6 +147,13 @@
                                      (yield index)
                                      (loop (+ index 1))))))
                           (make-hasheq `((frame ,frame)))))
+
+(define-namespace-anchor commands-ns-anchor)
+(define ns (namespace-anchor->namespace commands-ns-anchor))
+(define my-eval
+  (lambda (command)
+    (printf "on cmd: ~a ...~n" command)
+    (eval command ns)))
 
 (reset)
 (make-directory (cadar basename))
@@ -176,4 +181,6 @@
                (pad (car (hash-ref knob 'frame)) (number-length (cadar frames)))
                ".png"))
         (reset))))
+
+(printf "Done!~n")
 ;; ================================================================
