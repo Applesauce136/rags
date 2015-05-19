@@ -108,15 +108,13 @@
 ;; ----------------------------------------------------------------
 (define get-commands
   (lambda (in)
-    (generator
-     ()
-     (let one-match ((result (my-parser
-                              (lambda ()
-                                (my-lexer in)))))
-       (if result
-           (begin (yield result)
-                  (one-match (my-parser
-                              (lambda ()
-                                (my-lexer in)))))
-           #f)))))
+    (let one-match ((result (my-parser
+                             (lambda ()
+                               (my-lexer in)))))
+      (if result
+          (cons result
+                (one-match (my-parser
+                            (lambda ()
+                              (my-lexer in)))))
+          '()))))
 ;; ================================================================
