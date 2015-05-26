@@ -17,7 +17,7 @@
   (FRAMES VARY BASENAME
           PUSH POP
           MOVE SCALE ROTATE
-          BOX SPHERE TORUS LINE
+          BOX SPHERE TORUS LINE TRIANGLE
           SAVE
           EOF NEWLINE))
 
@@ -31,12 +31,12 @@
          ((:or "FRAMES" "VARY" "BASENAME"
                "PUSH" "POP"
                "MOVE" "SCALE" "ROTATE"
-               "BOX" "SPHERE" "TORUS" "LINE"
+               "BOX" "SPHERE" "TORUS" "LINE" "TRIANGLE"
                "SAVE"
                "frames" "vary" "basename"
                "push" "pop"
                "move" "scale" "rotate"
-               "box" "sphere" "torus" "line"
+               "box" "sphere" "torus" "line" "triangle"
                "save")
           (string->symbol (string-upcase lexeme)))
          ((:: (:? #\-)
@@ -100,6 +100,10 @@
      ((LINE NUMBER NUMBER NUMBER
             NUMBER NUMBER NUMBER)
       `(line ,$2 ,$3 ,$4 ,$5 ,$6 ,$7))
+     ((TRIANGLE NUMBER NUMBER NUMBER
+                NUMBER NUMBER NUMBER
+                NUMBER NUMBER NUMBER)
+      `(triangle ,$2 ,$3 ,$4 ,$5 ,$6 ,$7 ,$8 ,$9 ,$10))
      ((SAVE STRING)
       `(save ,$2))))))
 ;; ================================================================

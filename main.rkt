@@ -106,6 +106,10 @@
   (lambda (x0 y0 z0 x1 y1 z1)
     (draw-pixels
      (make-line (first stack) x0 y0 z0 x1 y1 z1))))
+(define triangle
+  (lambda (x0 y0 z0 x1 y1 z1 x2 y2 z2)
+    (draw-pixels
+     (make-triangle (first stack) x0 y0 z0 x1 y1 z1 x2 y2 z2))))
 ;; ================================================================
 
 ;; MAIN
@@ -156,8 +160,6 @@
     (eval command ns)))
 
 (reset)
-(make-directory (cadar basename))
-(current-directory (cadar basename))
 (if (or (null? frames)
         (null? basename)
         (null? varys))
@@ -167,6 +169,8 @@
                              '(vary basename frames)))
                      raw-commands))
     (begin
+      (make-directory (cadar basename))
+      (current-directory (cadar basename))
       (map my-eval varys)
       (for ((knob knobs))
         (for ((command loop-commands))

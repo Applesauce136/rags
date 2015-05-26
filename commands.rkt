@@ -3,7 +3,7 @@
 (require racket/generator)
 
 (provide move-point scale-point rotate-point
-         make-box make-sphere make-torus make-line)
+         make-box make-sphere make-torus make-triangle make-line)
 
 (define steps 30)
 
@@ -174,6 +174,12 @@
   (lambda (transforms x0 y0 z0 x1 y1 z1)
     (draw-line (transforms (list x0 y0 z0))
                (transforms (list x1 y1 z1)))))
+
+(define make-triangle
+  (lambda (transforms x0 y0 z0 x1 y1 z1 x2 y2 z2)
+    (apply draw-triangle (map transforms `((,x0 ,y0 ,z0)
+                                           (,x1 ,y1 ,z1)
+                                           (,x2 ,y2 ,z2))))))
 
 (define draw-triangle
   (lambda (pt0 pt1 pt2)
