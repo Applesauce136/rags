@@ -20,36 +20,9 @@
 
 (define draw-triangle 
   (lambda (p0 p1 p2)
-    (call-with-values (lambda ()
-                        (apply values
-                               (sort (list p0 p1 p2)
-                                     <
-                                     #:key first)))
-      (lambda (n0 n1 n2)
-        (printf "n0: ~a~nn1: ~a~nn2: ~a~n" n0 n1 n2)
-        (call-with-values (lambda ()
-                            (values (draw-line n0 n1)
-                                    (draw-line n1 n2)
-                                    (draw-line n0 n2)))
-          (lambda (first-half second-half base)
-            (generator
-             ()
-             (let line ((e0 (base))
-                        (e1 (first-half)))
-               (define one-line (draw-line e0 e1))
-               (let pixel (val (one-line))
-                 (if val
-                     (begin (yield val)
-                            (pixel (one-line)))
-                     #f))
-               (line (base) (first-half))
-               (line (base) (second-half)))
-             (yield 0)))) 
-        ))
-    ;; (mash-generators (draw-line n0 n1)
-    ;;                  (draw-line n1 n2)
-    ;;                  (draw-line n2 n0))
-    ))
+    (mash-generators (draw-line p0 p1)
+                     (draw-line p1 p2)
+                     (draw-line p2 p0))))
 
 (define draw-line 
   (lambda (pt0 pt1)
