@@ -20,9 +20,68 @@
 
 (define draw-triangle 
   (lambda (p0 p1 p2)
-    (mash-generators (draw-line p0 p1)
-                     (draw-line p1 p2)
-                     (draw-line p2 p0))))
+    (call-with-values (lambda ()
+                        (apply values
+                               (sort (list p0 p1 p2)
+                                     <
+                                     #:key first)))
+      (lambda (n0 n1 n2)
+        ;; (printf "n0: ~a~nn1: ~a~nn2: ~a~n" n0 n1 n2)
+        (call-with-values (lambda ()
+                            (values (draw-line n0 n2)
+                                    (draw-line n0 n1)
+                                    (draw-line n1 n2)))
+          (lambda (base first-half second-half)
+            (define ends (mash-generators first-half second-half))
+            ;; (generator ()
+            ;;            (let one-pixel ((val (ends)))
+            ;;              (if val
+            ;;                  (begin (yield val)
+            ;;                         (printf "px: ~a~n" val)
+            ;;                         (one-pixel (ends)))
+            ;;                  #f)))
+            (define only-if-y-moves
+              (lambda (gen)
+                (generator
+                 ()
+                 (define first-pixel (gen))
+                 (define first-y (cadr first-pixel))
+                 (let one-pixel ((pixel first-pixel)
+                                 (y first-y))
+                   (printf "y: ~a~n" y)
+                   (printf "pixel: ~a~n" pixel)
+                   (cond ((not pixel)
+                          #f)
+                         ((= y (cadr pixel))
+                          (begin (yield pixel)
+                                 (one-pixel (gen) (+ y 1))))
+                         (else
+                          (one-pixel (gen) y)))))))
+            (define new-base (only-if-y-moves base))
+            (define new-ends (only-if-y-moves ends))
+            ;; (generator ()
+            ;;            (let one-pixel ((val (new-ends)))
+            ;;              (if val
+            ;;                  (begin (yield val)
+            ;;                         (printf "px: ~a~n" val)
+            ;;                         (one-pixel (new-ends)))
+            ;;                  #f)))
+            (generator
+             ()
+             (let line ((e0 (new-base))
+                        (e1 (new-ends)))
+               (if (and e0 e1)
+                   (begin
+                     (let ((one-line (draw-line e0 e1)))
+                       (let pixel ((val (one-line)))
+                         (if val
+                             (begin (yield val)
+                                    (pixel (one-line)))
+                             #f)))
+                     (line (new-base) (new-ends)))
+                   #f)))
+            ))))
+    ))
 
 (define draw-line 
   (lambda (pt0 pt1)
