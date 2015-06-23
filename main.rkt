@@ -9,8 +9,11 @@
 
 ;; BITMAP
 ;; ----------------------------------------------------------------
+(define width 500)
+(define height 500)
 (define my-bitmap-dc (new bitmap-dc% (bitmap
-                                      (make-bitmap 500 500))))
+                                      (make-bitmap width height))))
+(define z-buffer (make-vector (* width height) -inf.0))
 (send my-bitmap-dc set-background (make-color 0 0 0))
 (define draw-pixels
   (lambda (gen)
@@ -18,7 +21,7 @@
                         (send my-bitmap-dc get-size))
       (lambda (width height)
         (let draw-pixel
-            ((val (gen)))      
+            ((val (gen)))
           (if val
               (begin
                 (call-with-values (lambda ()
@@ -26,9 +29,12 @@
                                            (map exact-floor val)))
                   (lambda (x y z)
                     (when (and (< -1 x width)
-                               (< -1 y height))
+                               (< -1 y height)
+                               (< (vector-ref z-buffer (exact-floor (+ (* y width) x)))
+                                  z))
                       (send my-bitmap-dc set-pixel
-                            x y (make-color 255 255 0)))))
+                            x y (make-color 255 255 0))
+                      (vector-set! z-buffer (exact-floor (+ (* y width) x)) z))))
                 (draw-pixel (gen)))
               #f))))))
 (define save

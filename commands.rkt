@@ -42,8 +42,8 @@
                      (,x ,y ,(+ z depth)))
                     ;; bottom face
                     ((,(+ x width) ,(+ y height) ,(+ z depth))
-                     (,x ,(+ y height) ,(+ z depth))
-                     (,(+ x width) ,(+ y height) ,z))
+                     (,(+ x width) ,(+ y height) ,z)
+                     (,x ,(+ y height) ,(+ z depth)))
                     ((,(+ x width) ,(+ y height) ,z)
                      (,x ,(+ y height) ,z)
                      (,x ,(+ y height) ,(+ z depth)))
@@ -84,7 +84,8 @@
            (if (= step (+ steps init))
                #f
                (begin
-                 (yield ((compose transforms
+                 (yield ((compose (move-point x y z)
+                                  transforms
                                   (rotate-point 'y (* 360 (/ (+ bigstep offset) steps))))
                          (list (+ rad-t (* rad-c (cos (* 2 pi (/ step steps)))))
                                (+ 0 (* rad-c (sin (* 2 pi (/ step steps)))))
@@ -102,21 +103,30 @@
                    (values
                     (circle-generator bigstep 0 0)
                     (circle-generator bigstep 1 0)
-                    (circle-generator bigstep 0 1)))
-               (lambda (c0 c1 c2)
+                    (circle-generator bigstep 0 1)
+                    (circle-generator bigstep 1 1)))
+               (lambda (c0 c1 c2 c3)
                  (let one-triangle
-                     ((p0 (c0)) (p1 (c1)) (p2 (c2)))
-                   (if (and p0 p1 p2)
-                       (let ((triangle (draw-triangle p0 p1 p2)))
+                     ((p0 (c0)) (p1 (c1)) (p2 (c2)) (p3 (c3)))
+                   (if (and p0 p1 p2 p3)
+                       (let ((triangle1 (draw-triangle p0 p1 p2))
+                             (triangle2 (draw-triangle p1 p3 p2)))
                          (begin
                            (when (frontface? (list p0 p1 p2))
-                             (let one-pt
-                                 ((val (triangle)))
+                             (let one-pt-1
+                                 ((val (triangle1)))
                                (if val
                                    (begin (yield val)
-                                          (one-pt (triangle)))
+                                          (one-pt-1 (triangle1)))
                                    #f)))
-                           (one-triangle (c0) (c1) (c2))))
+                           (when (frontface? (list p1 p3 p2))
+                             (let one-pt-2
+                                 ((val (triangle2)))
+                               (if val
+                                   (begin (yield val)
+                                          (one-pt-2 (triangle2)))
+                                   #f)))
+                             (one-triangle (c0) (c1) (c2) (c3))))
                        #f))))
              (one-ring (+ bigstep 1))))))))
 
